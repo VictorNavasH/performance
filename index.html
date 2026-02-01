@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NÜA Control Center</title>
+    <title>NÜA Smart Performance</title>
     <style>
         * {
             box-sizing: border-box;
@@ -128,10 +128,12 @@
             min-height: 80vh;
         }
 
-        .login-logo {
-            font-size: 48px;
-            margin-bottom: 8px;
-            color: #227c9d;
+        .login-logo-img {
+            width: 140px;
+            height: auto;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            filter: drop-shadow(0 4px 12px rgba(34, 124, 157, 0.3));
         }
 
         .login-title {
@@ -499,8 +501,8 @@
     <div class="container">
         <!-- 1. LOGIN SCREEN -->
         <div class="login-screen" id="loginScreen">
-            <div class="login-logo">U</div>
-            <div class="login-title">NÜA <span>SMART KITCHEN</span></div>
+            <img class="login-logo-img" src="https://itrestaurant.net/img/design-img1.png" alt="Smart Table" onerror="this.style.display='none'">
+            <div class="login-title">NÜA <span>SMART PERFORMANCE</span></div>
             <div class="login-subtitle">Introduce tu PIN</div>
             <div class="pin-dots" id="pinDots">
                 <div class="pin-dot"></div>
