@@ -1161,6 +1161,23 @@
                 status.textContent = "❌ Error: " + e.message; status.className = "status show error";
             }
         }
+        // AUTO-LOGIN via URL param ?pin=XXXX
+        (function autoLoginFromURL() {
+            var params = new URLSearchParams(window.location.search);
+            var urlPin = params.get('pin');
+            if (urlPin) {
+                var roles = { "2020": "camarero", "9069": "admin" };
+                var role = roles[urlPin];
+                if (role) {
+                    currentPin = urlPin;
+                    currentRole = role;
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('modeSelector').style.display = 'flex';
+                    document.getElementById('welcomeUser').textContent = 'Bienvenido, ' + (role == 'admin' ? 'Admin' : 'Equipo');
+                    initApp();
+                }
+            }
+        })();
     </script>
 </body>
 
