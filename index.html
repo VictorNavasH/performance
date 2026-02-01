@@ -763,19 +763,39 @@
 
         async function toggleMenu(id, enabled) {
             var status = document.getElementById('statusRest');
-            status.textContent = "Actualizando menú..."; status.className = "status show loading";
+            var isCategory = (id === SMART_MENU_CATEGORY.id);
+            status.textContent = isCategory ? "Actualizando categoría y menús..." : "Actualizando menú...";
+            status.className = "status show loading";
             try {
-                var res = await fetch('/api/menus', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ categoryId: id, isEnabled: enabled })
+                // Siempre PATCH el item que se tocó
+                var ids = [id];
+                // Si es la categoría padre, también PATCH todos los hijos
+                if (isCategory) {
+                    RESTAURANT_MENUS.forEach(function (m) { ids.push(m.id); });
+                }
+                // Enviar todos en paralelo
+                var promises = ids.map(function (catId) {
+                    return fetch('/api/menus', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ categoryId: catId, isEnabled: enabled })
+                    }).then(function (r) { return r.json(); });
                 });
-                var data = await res.json();
-                if (data.success) {
-                    status.textContent = "✅ Menú " + (enabled ? "activado" : "desactivado");
+                var results = await Promise.all(promises);
+                var failed = results.filter(function (r) { return !r.success; });
+                if (failed.length === 0) {
+                    status.textContent = "✅ " + (isCategory ? "Categoría y menús" : "Menú") + (enabled ? " activados" : " desactivados");
                     status.className = "status show success";
+                    // Si es categoría, sincronizar toggles hijos
+                    if (isCategory) {
+                        document.querySelectorAll('#menuList .menu-item input[type=checkbox]').forEach(function (cb) {
+                            cb.checked = enabled;
+                        });
+                    }
                     setTimeout(function () { status.className = "status"; }, 2000);
-                } else throw new Error(data.error);
+                } else {
+                    throw new Error(failed[0].error);
+                }
             } catch (e) {
                 status.textContent = "❌ Error: " + e.message; status.className = "status show error";
             }
