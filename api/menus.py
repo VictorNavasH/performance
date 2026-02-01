@@ -16,8 +16,8 @@ def ssl_ctx():
     return ctx
 
 def get_restaurant_jwt():
+    # Paso 1: DotykMe Token
     try:
-        # Paso 1: DotykMe Token
         req = urllib.request.Request(
             TOKEN_API,
             data=json.dumps({
@@ -30,11 +30,13 @@ def get_restaurant_jwt():
         with urllib.request.urlopen(req, context=ssl_ctx(), timeout=15) as r:
             token_data = json.loads(r.read().decode())
             dotyk_token = token_data.get("token") or token_data.get("access_token")
-
         if not dotyk_token:
-            return None, "Paso1: No se obtuvo token de DotykMe"
+            return None, "Paso1: token vacio"
+    except Exception as e:
+        return None, f"Paso1-DotykMe: {str(e)}"
 
-        # Paso 2: Portal Login
+    # Paso 2: Portal Login
+    try:
         cj = http.cookiejar.CookieJar()
         opener = urllib.request.build_opener(
             urllib.request.HTTPCookieProcessor(cj),
@@ -47,22 +49,23 @@ def get_restaurant_jwt():
             method="POST"
         )
         opener.open(req, timeout=15)
+    except Exception as e:
+        return None, f"Paso2-PortalLogin: {str(e)}"
 
-        # Paso 3: Restaurant JWT
+    # Paso 3: Restaurant JWT
+    try:
         app_url = f"{RESTAURANT_API}/{VENUE}"
         token_url = f"{PORTAL_TOKEN_API}?appUrl={urllib.request.quote(app_url, safe='')}"
         req = urllib.request.Request(token_url, headers={"User-Agent": "Mozilla/5.0"}, method="GET")
         with opener.open(req, timeout=15) as r:
             portal_data = json.loads(r.read().decode())
             restaurant_jwt = portal_data.get("token")
-
         if not restaurant_jwt:
-            return None, "Paso3: El Portal no devolvio JWT de Restaurant"
-
-        return (restaurant_jwt, opener), None
-
+            return None, f"Paso3: sin token, respuesta={json.dumps(portal_data)[:200]}"
     except Exception as e:
-        return None, f"Fallo en Auth: {str(e)}"
+        return None, f"Paso3-PortalToken: {str(e)}"
+
+    return (restaurant_jwt, opener), None
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -80,7 +83,7 @@ class handler(BaseHTTPRequestHandler):
             is_enabled = body.get("isEnabled")
 
             if not EMAIL or not PASSWORD:
-                self.send_json(500, {"success": False, "error": "Credenciales no configuradas en Vercel"})
+                self.send_json(500, {"success": False, "error": f"Sin credenciales. EMAIL={bool(EMAIL)} PASS={bool(PASSWORD)}"})
                 return
 
             auth_result, err = get_restaurant_jwt()
@@ -90,7 +93,6 @@ class handler(BaseHTTPRequestHandler):
 
             jwt_token, opener = auth_result
 
-            # PATCH Category
             url = f"{RESTAURANT_API}/{VENUE}/Category"
             payload = {"id": category_id, "isEnabled": is_enabled, "type": "Category"}
             req = urllib.request.Request(
@@ -99,24 +101,24 @@ class handler(BaseHTTPRequestHandler):
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {jwt_token}",
-                    "X-Requested-With": "XMLHttpRequest",
                     "User-Agent": "Mozilla/5.0"
                 },
                 method="PATCH"
             )
 
-            with opener.open(req, timeout=15) as resp:
-                self.send_json(200, {"success": True, "message": "OK"})
-
-        except urllib.request.HTTPError as he:
-            body_err = ""
             try:
-                body_err = he.read().decode()[:300]
-            except:
-                pass
-            self.send_json(500, {"success": False, "error": f"PATCH fallo: {he.code} {he.reason} - {body_err}"})
+                with opener.open(req, timeout=15) as resp:
+                    self.send_json(200, {"success": True, "message": "OK"})
+            except urllib.request.HTTPError as he:
+                body_err = ""
+                try:
+                    body_err = he.read().decode()[:300]
+                except:
+                    pass
+                self.send_json(500, {"success": False, "error": f"PATCH: {he.code} - {body_err}"})
+
         except Exception as e:
-            self.send_json(500, {"success": False, "error": f"Error Final: {str(e)}"})
+            self.send_json(500, {"success": False, "error": f"General: {str(e)}"})
 
     def send_json(self, code, data):
         self.send_response(code)
