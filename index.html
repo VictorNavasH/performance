@@ -1,59 +1,339 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dotyk Publisher - NÜA</title>
     <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { margin: 0; padding: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; color: white; }
-        .container { max-width: 600px; margin: 0 auto; }
-        h1 { text-align: center; margin-bottom: 10px; font-size: 24px; }
-        .subtitle { text-align: center; color: rgba(255,255,255,0.6); margin-bottom: 30px; font-size: 14px; }
-        .card { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; margin-bottom: 20px; backdrop-filter: blur(10px); }
-        .card h2 { margin: 0 0 16px 0; font-size: 18px; color: #4ade80; }
-        .quick-videos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px; }
-        .video-card { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .video-card:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
-        .video-card.selected { background: rgba(74, 222, 128, 0.2); border-color: #4ade80; }
-        .video-card .icon { font-size: 1.8em; margin-bottom: 6px; }
-        .video-card .name { font-size: 10px; font-weight: 600; line-height: 1.2; }
-        .more-videos-container { margin-top: 12px; }
-        .more-videos-toggle { width: 100%; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .more-videos-toggle:hover { background: rgba(255,255,255,0.1); }
-        .more-videos-toggle .arrow { transition: transform 0.3s; }
-        .more-videos-toggle.open .arrow { transform: rotate(180deg); }
-        .more-videos-dropdown { display: none; margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 10px; }
-        .more-videos-dropdown.show { display: block; }
-        .more-videos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; }
-        .selected-video { display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(74, 222, 128, 0.15); border: 2px solid #4ade80; border-radius: 12px; margin-bottom: 16px; }
-        .selected-video .icon { font-size: 2.5em; }
-        .selected-video .info h3 { margin: 0 0 4px 0; font-size: 16px; color: #4ade80; }
-        .selected-video .info span { font-size: 12px; color: rgba(255,255,255,0.6); }
-        .mesas-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-        .mesa-btn { aspect-ratio: 1; border: 2px solid rgba(255,255,255,0.2); border-radius: 12px; background: rgba(255,255,255,0.05); color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-        .mesa-btn:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
-        .mesa-btn.selected { background: #4ade80; border-color: #4ade80; color: #1a1a2e; }
-        .mesa-btn.publishing { background: #3b82f6; border-color: #3b82f6; animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .select-all-btn { grid-column: span 6; aspect-ratio: auto; padding: 12px; font-size: 14px; background: rgba(74, 222, 128, 0.2); border-color: #4ade80; }
-        .select-all-btn.selected { background: #4ade80; }
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: #4ade80; color: #1a1a2e; }
-        .btn-primary:hover { background: #22c55e; transform: scale(1.02); }
-        .btn-primary:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
-        .status { text-align: center; padding: 12px; border-radius: 8px; margin-top: 16px; display: none; }
-        .status.show { display: block; }
-        .status.success { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
-        .status.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-        .status.loading { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-        .quick-actions { display: flex; gap: 8px; margin-bottom: 12px; }
-        .quick-actions button { flex: 1; padding: 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: transparent; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 12px; }
-        .quick-actions button:hover { background: rgba(255,255,255,0.1); color: white; }
-        .counter { text-align: center; margin-top: 12px; color: rgba(255,255,255,0.6); font-size: 14px; }
-        .footer { text-align: center; margin-top: 20px; color: rgba(255,255,255,0.4); font-size: 12px; }
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            color: #4ade80;
+        }
+
+        .quick-videos {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .video-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .video-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .video-card.selected {
+            background: rgba(74, 222, 128, 0.2);
+            border-color: #4ade80;
+        }
+
+        .video-card .thumb {
+            width: 100%;
+            aspect-ratio: 16/9;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .video-card .name {
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.2;
+            height: 2.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .more-videos-container {
+            margin-top: 12px;
+        }
+
+        .more-videos-toggle {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .more-videos-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .more-videos-toggle .arrow {
+            transition: transform 0.3s;
+        }
+
+        .more-videos-toggle.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .more-videos-dropdown {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .more-videos-dropdown.show {
+            display: block;
+        }
+
+        .more-videos-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .selected-video {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(74, 222, 128, 0.15);
+            border: 2px solid #4ade80;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .selected-video .thumb {
+            width: 120px;
+            aspect-ratio: 16/9;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .selected-video .info h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            color: #4ade80;
+        }
+
+        .selected-video .info span {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mesas-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+
+        .mesa-btn {
+            aspect-ratio: 1;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mesa-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .mesa-btn.selected {
+            background: #4ade80;
+            border-color: #4ade80;
+            color: #1a1a2e;
+        }
+
+        .mesa-btn.publishing {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .select-all-btn {
+            grid-column: span 6;
+            aspect-ratio: auto;
+            padding: 12px;
+            font-size: 14px;
+            background: rgba(74, 222, 128, 0.2);
+            border-color: #4ade80;
+        }
+
+        .select-all-btn.selected {
+            background: #4ade80;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4ade80;
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            background: #22c55e;
+            transform: scale(1.02);
+        }
+
+        .btn-primary:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .status.loading {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .quick-actions button {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .quick-actions button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .counter {
+            text-align: center;
+            margin-top: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Dotyk Publisher</h1>
@@ -61,8 +341,10 @@
         <div class="card">
             <h2>Selecciona Video</h2>
             <div id="selectedVideo" class="selected-video" style="display: none;">
-                <div class="icon" id="selectedIcon"></div>
-                <div class="info"><h3 id="selectedName">-</h3><span>Video seleccionado</span></div>
+                <img id="selectedThumb" class="thumb" src="" alt="Thumbnail">
+                <div class="info">
+                    <h3 id="selectedName">-</h3><span>Video seleccionado</span>
+                </div>
             </div>
             <div class="quick-videos" id="quickVideos"></div>
             <div class="more-videos-container">
@@ -92,31 +374,31 @@
         <div class="footer">Conectado a Dotyk Performance Show</div>
     </div>
     <script>
-        var BASE_URL = "https://irtperformanceshoweu.blob.core.windows.net/dotykcloudperformanceshow/";
+        var THUMB_URL = "https://dotykpreviews.blob.core.windows.net/thumbnails/";
         var QUICK_VIDEOS = [
-            { id: "1qfl_FzhVSQfWSsQ6uBLxswJV9x4_BbeV22KojBIMOwxJAD4CGPWPwFnFf8m", name: "CUMPLE GENERAL", icon: "C" },
-            { id: "3qIll9Wlan7lvnHmGHCHfkCFccbd6YLqtoxDAi3CHanj4ZMNYgcAD2vxBtMd", name: "TIEMPO AGOTADO", icon: "T" },
-            { id: "Sa1XOxcY_ytPez8aein6Hy4YLWYxeLuqSF1SG43hFQ_ivKK1P_pErXcRLf37", name: "VOLUMEN ELEVADO", icon: "V" },
-            { id: "WxLLkbKYsA2uLjVvvhhDG8dgypnPotBB0qN1zqvNHK2CLB1mAi6WLv8OUfm3", name: "RETRASOS", icon: "R" },
-            { id: "SuGs0x4OaOzF_W9AIi_OYr7OVm2EsUf39u_HmiGDG3Wze0kZJCLQbgAYoGlp", name: "SHHHHH", icon: "S" }
+            { id: "1qfl_FzhVSQfWSsQ6uBLxswJV9x4_BbeV22KojBIMOwxJAD4CGPWPwFnFf8m", name: "CUMPLE GENERAL", thumb: "MdjRFpTGos3v0r9IwudhttkFbsLwo-3dgvEtkUuM" },
+            { id: "3qIll9Wlan7lvnHmGHCHfkCFccbd6YLqtoxDAi3CHanj4ZMNYgcAD2vxBtMd", name: "TIEMPO AGOTADO", thumb: "8voUMETpAmmpoeAHKSt7vmiwLfEQRB32CdSXAvJU" },
+            { id: "Sa1XOxcY_ytPez8aein6Hy4YLWYxeLuqSF1SG43hFQ_ivKK1P_pErXcRLf37", name: "VOLUMEN ELEVADO", thumb: "vSyIvV9ZxLcyuG5bEnL3GEu_yGqu_zq6-Lqhg03Z" },
+            { id: "WxLLkbKYsA2uLjVvvhhDG8dgypnPotBB0qN1zqvNHK2CLB1mAi6WLv8OUfm3", name: "RETRASOS", thumb: "oBnZzcmE7OP3j5NfYVYBYPfAqK5ZvxBMEhwu7CxR" },
+            { id: "SuGs0x4OaOzF_W9AIi_OYr7OVm2EsUf39u_HmiGDG3Wze0kZJCLQbgAYoGlp", name: "SHHHHH", thumb: "FG4SHRXXxmimmylzr8qIKxVMRRF6xhMIta78XJOP" }
         ];
         var MORE_VIDEOS = [
-            { id: "4RwbgS0krw8W4MUCaatGs4mltolJYa7qO2jpgVtIb-YeTswBGwnnx1WWx3zB", name: "CUMPLE NUA", icon: "N" },
-            { id: "32dg9T2c4VDdgz911Ont8-7KCivXhaAtWY_qqEbBdmpntgvZ-183MOXKQXo5", name: "Simulacion juego", icon: "J" },
-            { id: "QHdpsxolVKtBKrvI3GRMELI6YCuFWk4RlkoIOPExlR8q3KwfOX-8DBvZODAi", name: "SCREAM", icon: "!" },
-            { id: "y4_Oc92qpCLg30XkrrRpEMdz7Kepy9WRAXJEA9RQI5qskmjwqG4yMLwEbXkp", name: "FREDDY", icon: "F" },
-            { id: "foMwA4gNRlWtBOb32bvSokNNhWwcGIoNaDcQmq1Y2l48qU9Gfw4s-mvWYRfZ", name: "SIERRA SCREAM", icon: "X" },
-            { id: "FcyXBaU-VbDnpQ1prcngwKQnTqrmlcOoFR3_bfc_Zs2307XyzKq7CUvrhRLS", name: "SILLA EXORCISTA", icon: "E" },
-            { id: "bFeZGewRT-zGZ_hDkmAeeN6abb0XVm_bKutJSEVrPzMk5ahM1dERN6a-5JSC", name: "CAMPANITA", icon: "B" },
-            { id: "InJUQAwi8Q_5KTUAj6O4cB3XaStsogyliiUZ3L-feXUGQlsrqYeRQodogKIb", name: "CASA ZOMBIE", icon: "Z" },
-            { id: "LImnGasDp-MdYtRNIoLyeutF9KyqaeHcMWW5eXdHTFVOBn_0ML0gTC8a1BRD", name: "NINA CABELLO", icon: "H" },
-            { id: "2xUqdAwgP3eu90yiJPGZYnTYyVipJ5oAXqR1dSIDSHj9QqYM4BuLUdQj6myj", name: "VENTANA LLAMADA", icon: "W" },
-            { id: "3M09y8w-8TCP6kujptBPoMP9X4KbQ4M2aSxIBv3lTvK01rmQt1l2s0TwWzzg", name: "RESIDENT EVIL", icon: "RE" },
-            { id: "tx1DHCGxdsEsFwvNsszqtaLx5JJK3cfRvFCKkI4AEtI9mGFUHhHeq-OTgB4T", name: "Navidad Horror", icon: "NH" },
-            { id: "0t8r-4SIcKPoUMFcSNT83BWbywzolABeYwXRNKu3LUKAtU4sZNRefy17YyLF", name: "Chica llamada", icon: "CL" },
-            { id: "1H8mBGCoEvWjXTxIU-8KaQTUKssDeSynmkn0vC9P1kSV60M5b0wj-lYl5WNm", name: "please open", icon: "PO" },
-            { id: "s1rZwOx1y_C9zAo20cVXmg0PVCUzBk774oefHUIZ4QZmoalCdqaTWlWVegOx", name: "CUMPLE MESA 17", icon: "17" },
-            { id: "9HhAtVLKu5LbVE3jZYwYQt6L0jidSm6-l9TWHoSV1UItFV6mxlwm6Am9nAQk", name: "imagenes terrorificas", icon: "IT" }
+            { id: "4RwbgS0krw8W4MUCaatGs4mltolJYa7qO2jpgVtIb-YeTswBGwnnx1WWx3zB", name: "CUMPLE NUA", thumb: "MvyfU-hu4AmAj4-ka9aHrRJ0v3uwhJC1VX6N88hW" },
+            { id: "32dg9T2c4VDdgz911Ont8-7KCivXhaAtWY_qqEbBdmpntgvZ-183MOXKQXo5", name: "Simulacion juego", thumb: "CIMXPqkRDOaZXUbd07VBW2M25JbpNyq0xBKqNcsm" },
+            { id: "QHdpsxolVKtBKrvI3GRMELI6YCuFWk4RlkoIOPExlR8q3KwfOX-8DBvZODAi", name: "SCREAM", thumb: "4oEzc4mDMEpUQAVxkkztHjImppSbRZnHAw6AXEJw" },
+            { id: "y4_Oc92qpCLg30XkrrRpEMdz7Kepy9WRAXJEA9RQI5qskmjwqG4yMLwEbXkp", name: "FREDDY", thumb: "IAO7hV5ppQ2foBsAU6TIpxqVh9ZZfi1-fhoQ_sO2" },
+            { id: "foMwA4gNRlWtBOb32bvSokNNhWwcGIoNaDcQmq1Y2l48qU9Gfw4s-mvWYRfZ", name: "SIERRA SCREAM", thumb: "IDM-3miCLhbiJ_L6DjxBZIYJMSj34GSWJ_13NtPE" },
+            { id: "FcyXBaU-VbDnpQ1prcngwKQnTqrmlcOoFR3_bfc_Zs2307XyzKq7CUvrhRLS", name: "SILLA EXORCISTA", thumb: "VrfuZwnDrHJBAmiA0ofk7nVC6oQzQZDgJzYU0rOJ" },
+            { id: "bFeZGewRT-zGZ_hDkmAeeN6abb0XVm_bKutJSEVrPzMk5ahM1dERN6a-5JSC", name: "CAMPANITA", thumb: "xfeUIkc9ziaV8c0nuW85sZ3wzZQ5erijzzxe8Sux" },
+            { id: "InJUQAwi8Q_5KTUAj6O4cB3XaStsogyliiUZ3L-feXUGQlsrqYeRQodogKIb", name: "CASA ZOMBIE", thumb: "uzs1QC9CxJ8pqzVrly5G2m97BJZWUpcd_K6AIA5n" },
+            { id: "LImnGasDp-MdYtRNIoLyeutF9KyqaeHcMWW5eXdHTFVOBn_0ML0gTC8a1BRD", name: "NINA CABELLO", thumb: "IWiW0NzdauJ9yy6kkzzpLiHbcuZig0zKbu3NthlV" },
+            { id: "2xUqdAwgP3eu90yiJPGZYnTYyVipJ5oAXqR1dSIDSHj9QqYM4BuLUdQj6myj", name: "VENTANA LLAMADA", thumb: "GzW3BGigGSSi2HKwZxeVhjeKd1HDDCbxsBR2d2jV" },
+            { id: "3M09y8w-8TCP6kujptBPoMP9X4KbQ4M2aSxIBv3lTvK01rmQt1l2s0TwWzzg", name: "RESIDENT EVIL", thumb: "7y6BRBUObk5mnGdy8C7Oep7b614ZTF69gKl7Fwu_" },
+            { id: "tx1DHCGxdsEsFwvNsszqtaLx5JJK3cfRvFCKkI4AEtI9mGFUHhHeq-OTgB4T", name: "Navidad Horror", thumb: "WKgfXXL_zx7IOw-h5RaEbq52cHWZu4hmS57WZF7l" },
+            { id: "0t8r-4SIcKPoUMFcSNT83BWbywzolABeYwXRNKu3LUKAtU4sZNRefy17YyLF", name: "Chica llamada", thumb: "YpLlEkZOq92CDy8EdGidAOUsplLJHGrp0RMWiUIv" },
+            { id: "1H8mBGCoEvWjXTxIU-8KaQTUKssDeSynmkn0vC9P1kSV60M5b0wj-lYl5WNm", name: "please open", thumb: "CR-uQAjODWuzYBo1iFTIw8U61iGxhpSwy0GJ_tne" },
+            { id: "s1rZwOx1y_C9zAo20cVXmg0PVCUzBk774oefHUIZ4QZmoalCdqaTWlWVegOx", name: "CUMPLE MESA 17", thumb: "TZ-FLFXPdbTwfYEwp8pEtGXMThN2_hl1WyLv79xj" },
+            { id: "9HhAtVLKu5LbVE3jZYwYQt6L0jidSm6-l9TWHoSV1UItFV6mxlwm6Am9nAQk", name: "imagenes terrorificas", thumb: "q9TT1GeZj327AxS-B1ilQog-twqUVssKP0_l3iFi" }
         ];
         var ALL_VIDEOS = QUICK_VIDEOS.concat(MORE_VIDEOS);
         var MESAS = [
@@ -129,7 +411,7 @@
         ];
         var selectedVideo = null;
         var selectedMesas = new Set();
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             renderQuickVideos();
             renderMoreVideos();
             renderMesas();
@@ -140,7 +422,7 @@
             for (var i = 0; i < QUICK_VIDEOS.length; i++) {
                 var v = QUICK_VIDEOS[i];
                 html += "<div class='video-card' data-video-id='" + v.id + "' onclick=\"selectVideoById('" + v.id + "')\">";
-                html += "<div class='icon'>" + v.icon + "</div>";
+                html += "<img class='thumb' src='" + THUMB_URL + v.thumb + "'>";
                 html += "<div class='name'>" + v.name + "</div></div>";
             }
             grid.innerHTML = html;
@@ -151,7 +433,7 @@
             for (var i = 0; i < MORE_VIDEOS.length; i++) {
                 var v = MORE_VIDEOS[i];
                 html += "<div class='video-card' data-video-id='" + v.id + "' onclick=\"selectVideoById('" + v.id + "')\">";
-                html += "<div class='icon'>" + v.icon + "</div>";
+                html += "<img class='thumb' src='" + THUMB_URL + v.thumb + "'>";
                 html += "<div class='name'>" + v.name + "</div></div>";
             }
             grid.innerHTML = html;
@@ -179,7 +461,7 @@
                 }
             }
             document.getElementById("selectedVideo").style.display = "flex";
-            document.getElementById("selectedIcon").textContent = selectedVideo.icon;
+            document.getElementById("selectedThumb").src = THUMB_URL + selectedVideo.thumb;
             document.getElementById("selectedName").textContent = selectedVideo.name;
             updatePublishBtn();
         }
@@ -236,28 +518,28 @@
             btn.textContent = "Publicando...";
             showStatus("Enviando " + selectedVideo.name + " a " + selectedMesas.size + " mesas...", "loading");
             var ids = [];
-            selectedMesas.forEach(function(id) { ids.push(id); });
-            var videoUrl = BASE_URL + selectedVideo.id;
+            selectedMesas.forEach(function (id) { ids.push(id); });
+            var videoUrl = "https://irtperformanceshoweu.blob.core.windows.net/dotykcloudperformanceshow/" + selectedVideo.id;
             fetch("/api/publish", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ tables: ids, videoUrl: videoUrl })
             })
-            .then(function(response) { return response.json(); })
-            .then(function(result) {
-                if (result.success) {
-                    showStatus("Publicado en " + selectedMesas.size + " mesas!", "success");
-                } else {
-                    showStatus("Error: " + (result.error || "desconocido"), "error");
-                }
-            })
-            .catch(function(error) {
-                showStatus("Error: " + error.message, "error");
-            })
-            .finally(function() {
-                btn.disabled = false;
-                btn.textContent = "PUBLICAR";
-            });
+                .then(function (response) { return response.json(); })
+                .then(function (result) {
+                    if (result.success) {
+                        showStatus("Publicado en " + selectedMesas.size + " mesas!", "success");
+                    } else {
+                        showStatus("Error: " + (result.error || "desconocido"), "error");
+                    }
+                })
+                .catch(function (error) {
+                    showStatus("Error: " + error.message, "error");
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                    btn.textContent = "PUBLICAR";
+                });
         }
         function showStatus(message, type) {
             var status = document.getElementById("status");
@@ -266,4 +548,5 @@
         }
     </script>
 </body>
+
 </html>
