@@ -18,28 +18,46 @@ class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'POST, PATCH, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
 
     def do_POST(self):
+        self._handle_request()
+
+    def do_PATCH(self):
+        self._handle_request()
+
+    def _handle_request(self):
         try:
             length = int(self.headers.get('Content-Length', 0))
             body = json.loads(self.rfile.read(length)) if length else {}
-            table_ids = body.get("tables", [])
+            
+            # El frontend envía un objeto con "tables" que es una lista de objetos { item: { tableId: "..." } }
+            # O directamente una lista de IDs si es POST simple
+            tables_data = body.get("tables", [])
+            table_ids = []
+            
+            for item in tables_data:
+                if isinstance(item, dict) and "item" in item:
+                    table_ids.append(item["item"]["tableId"])
+                else:
+                    table_ids.append(str(item))
+                    
             video_url = body.get("videoUrl") or VIDEO_URL
             
             if not table_ids:
-                self.send_json(400, {"error": "No hay mesas"})
+                self.send_json(400, {"error": "No hay mesas seleccionadas"})
                 return
             if not EMAIL or not PASSWORD:
-                self.send_json(500, {"error": "Credenciales no configuradas"})
+                self.send_json(500, {"error": "Credenciales no configuradas en entorno"})
                 return
             
             # Token
             req = urllib.request.Request(TOKEN_API, data=json.dumps({"username": EMAIL, "password": PASSWORD, "duration": "Long", "audience": "https://dotyk.tech/", "scope": ["basic"]}).encode(), headers={"Content-Type": "application/json"}, method="POST")
             with urllib.request.urlopen(req, context=ssl_ctx(), timeout=30) as r:
-                token = json.loads(r.read().decode()).get("token")
+                token_data = json.loads(r.read().decode())
+                token = token_data.get("token") or token_data.get("access_token")
             
             # Login + Publish
             cj = http.cookiejar.CookieJar()
