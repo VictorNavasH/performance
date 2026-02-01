@@ -45,6 +45,7 @@ class handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length)) if length else {}
             category_id = body.get("categoryId")
             is_enabled = body.get("isEnabled")
+            category_name = body.get("name", "")
 
             if not EMAIL or not PASSWORD:
                 self.send_json(500, {"success": False, "error": f"Sin credenciales. EMAIL={bool(EMAIL)} PASS={bool(PASSWORD)}"})
@@ -62,7 +63,7 @@ class handler(BaseHTTPRequestHandler):
 
             # Paso 2: PATCH a la categoria
             url = f"{RESTAURANT_API}/{VENUE}/Category"
-            payload = {"id": category_id, "isEnabled": is_enabled, "type": "Category"}
+            payload = {"id": category_id, "name": category_name, "isEnabled": is_enabled, "type": "Category"}
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode(),

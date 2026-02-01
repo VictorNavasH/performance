@@ -778,7 +778,7 @@
                     return fetch('/api/menus', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ categoryId: catId, isEnabled: enabled })
+                        body: JSON.stringify({ categoryId: catId, isEnabled: enabled, name: catId === SMART_MENU_CATEGORY.id ? SMART_MENU_CATEGORY.name : RESTAURANT_MENUS.find(function(x){return x.id===catId}).name })
                     }).then(function (r) { return r.json(); });
                 });
                 var results = await Promise.all(promises);
