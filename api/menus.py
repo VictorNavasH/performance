@@ -4,8 +4,10 @@ import json, os, ssl, urllib.request, http.cookiejar
 EMAIL = os.environ.get("DOTYK_EMAIL", "")
 PASSWORD = os.environ.get("DOTYK_PASSWORD", "")
 TOKEN_API = "https://dotyk.me/api/v1.2/token/password"
-LOGIN_API = "https://dotyk.tech/api/user/LoginWithDotykMe"
+PORTAL_LOGIN_API = "https://portal.dotyk.cloud/api/user/LoginWithDotykMe"
+PORTAL_TOKEN_API = "https://portal.dotyk.cloud/api/portal/token"
 RESTAURANT_API = "https://eu.restaurant.dotyk.cloud"
+VENUE = "nua-barcelona"
 
 def ssl_ctx():
     ctx = ssl.create_default_context()
@@ -13,34 +15,53 @@ def ssl_ctx():
     ctx.verify_mode = ssl.CERT_NONE
     return ctx
 
-def get_authenticated_opener():
-    """Authenticate and return opener with session cookies."""
+def get_restaurant_token():
+    """
+    Auth flow (from HAR analysis):
+    1. Get DotykMe token with audience for portal
+    2. Login to portal.dotyk.cloud with that token (sets session cookies)
+    3. Get a JWT scoped to eu.restaurant.dotyk.cloud via portal token endpoint
+    4. Use that JWT as Bearer token for restaurant API calls
+    """
+    # Step 1: Get DotykMe token (audience = portal)
     req = urllib.request.Request(
         TOKEN_API,
         data=json.dumps({
             "username": EMAIL, "password": PASSWORD,
-            "duration": "Long", "audience": "https://dotyk.tech/", "scope": ["basic"]
+            "duration": "Long",
+            "audience": "https://portal.dotyk.cloud/",
+            "scope": ["basic"]
         }).encode(),
         headers={"Content-Type": "application/json"},
         method="POST"
     )
     with urllib.request.urlopen(req, context=ssl_ctx(), timeout=30) as r:
         token_data = json.loads(r.read().decode())
-        token = token_data.get("token") or token_data.get("access_token")
+        dotyk_token = token_data.get("token") or token_data.get("access_token")
 
+    # Step 2: Login to portal with DotykMe token (gets session cookies)
     cj = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(
         urllib.request.HTTPCookieProcessor(cj),
         urllib.request.HTTPSHandler(context=ssl_ctx())
     )
     req = urllib.request.Request(
-        LOGIN_API,
-        data=f'"{token}"'.encode(),
+        PORTAL_LOGIN_API,
+        data=f'"{dotyk_token}"'.encode(),
         headers={"Content-Type": "application/json"},
         method="POST"
     )
     opener.open(req, timeout=30)
-    return opener
+
+    # Step 3: Get JWT token scoped to restaurant API
+    app_url = f"{RESTAURANT_API}/{VENUE}"
+    token_url = f"{PORTAL_TOKEN_API}?appUrl={urllib.request.quote(app_url, safe='')}"
+    req = urllib.request.Request(token_url, method="GET")
+    with opener.open(req, timeout=30) as r:
+        portal_data = json.loads(r.read().decode())
+        restaurant_jwt = portal_data.get("token")
+
+    return restaurant_jwt
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -66,25 +87,28 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json(500, {"error": "Credenciales no configuradas"})
                 return
 
-            opener = get_authenticated_opener()
+            # Get JWT token for restaurant API
+            jwt_token = get_restaurant_token()
 
             # PATCH to toggle isEnabled
-            # Based on the screenshot, the endpoint name is just "Category"
-            url = f"{RESTAURANT_API}/api/Category"
+            # URL: /nua-barcelona/Category (NOT /api/Category)
+            url = f"{RESTAURANT_API}/{VENUE}/Category"
             patch_data = json.dumps({
                 "id": category_id,
-                "isEnabled": is_enabled
+                "isEnabled": is_enabled,
+                "type": "Category"
             }).encode()
             req = urllib.request.Request(
                 url,
                 data=patch_data,
                 headers={
                     "Content-Type": "application/json",
-                    "X-Requested-With": "XMLHttpRequest"
+                    "Content-Language": "es",
+                    "Authorization": f"Bearer {jwt_token}"
                 },
                 method="PATCH"
             )
-            with opener.open(req, timeout=30) as resp:
+            with urllib.request.urlopen(req, context=ssl_ctx(), timeout=30) as resp:
                 resp_body = resp.read().decode()
 
             self.send_json(200, {
