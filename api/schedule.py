@@ -72,6 +72,7 @@ def write_schedule(schedule_data):
             "Content-Type": "application/json",
             "x-api-version": "7",
             "x-content-type": "application/json",
+            "x-add-random-suffix": "0",
         },
         method="PUT"
     )
