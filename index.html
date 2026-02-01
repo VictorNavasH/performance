@@ -50,34 +50,125 @@
             color: #4ade80;
         }
 
-        /* Video preview */
-        .video-info {
+        .quick-videos {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .video-card {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .video-card:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .video-card.selected {
+            background: rgba(74, 222, 128, 0.2);
+            border-color: #4ade80;
+        }
+
+        .video-card .icon {
+            font-size: 1.8em;
+            margin-bottom: 6px;
+        }
+
+        .video-card .name {
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .more-videos-container {
+            margin-top: 12px;
+        }
+
+        .more-videos-toggle {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: rgba(255,255,255,0.8);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .more-videos-toggle:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .more-videos-toggle .arrow {
+            transition: transform 0.3s;
+        }
+
+        .more-videos-toggle.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .more-videos-dropdown {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .more-videos-dropdown.show {
+            display: block;
+        }
+
+        .more-videos-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .more-videos-grid .video-card .name {
+            font-size: 9px;
+        }
+
+        .selected-video {
             display: flex;
             align-items: center;
             gap: 16px;
             padding: 16px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(74, 222, 128, 0.15);
+            border: 2px solid #4ade80;
             border-radius: 12px;
+            margin-bottom: 16px;
         }
 
-        .video-info img {
-            width: 100px;
-            height: 75px;
-            object-fit: cover;
-            border-radius: 8px;
+        .selected-video .icon {
+            font-size: 2.5em;
         }
 
-        .video-details h3 {
+        .selected-video .info h3 {
             margin: 0 0 4px 0;
-            font-size: 18px;
+            font-size: 16px;
+            color: #4ade80;
         }
 
-        .video-details span {
+        .selected-video .info span {
+            font-size: 12px;
             color: rgba(255,255,255,0.6);
-            font-size: 14px;
         }
 
-        /* Mesas Grid */
         .mesas-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -116,22 +207,11 @@
             animation: pulse 1s infinite;
         }
 
-        .mesa-btn.success {
-            background: #22c55e;
-            border-color: #22c55e;
-        }
-
-        .mesa-btn.error {
-            background: #ef4444;
-            border-color: #ef4444;
-        }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
 
-        /* Botón ALL */
         .select-all-btn {
             grid-column: span 6;
             aspect-ratio: auto;
@@ -145,7 +225,6 @@
             background: #4ade80;
         }
 
-        /* Botones */
         .btn {
             width: 100%;
             padding: 18px;
@@ -174,7 +253,6 @@
             transform: none;
         }
 
-        /* Status */
         .status {
             text-align: center;
             padding: 12px;
@@ -183,26 +261,11 @@
             display: none;
         }
 
-        .status.show {
-            display: block;
-        }
+        .status.show { display: block; }
+        .status.success { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+        .status.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .status.loading { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
 
-        .status.success {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-        }
-
-        .status.error {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-        }
-
-        .status.loading {
-            background: rgba(59, 130, 246, 0.2);
-            color: #3b82f6;
-        }
-
-        /* Quick actions */
         .quick-actions {
             display: flex;
             gap: 8px;
@@ -225,7 +288,6 @@
             color: white;
         }
 
-        /* Counter */
         .counter {
             text-align: center;
             margin-top: 12px;
@@ -233,12 +295,23 @@
             font-size: 14px;
         }
 
-        /* Footer */
         .footer {
             text-align: center;
             margin-top: 20px;
             color: rgba(255,255,255,0.4);
             font-size: 12px;
+        }
+
+        .more-videos-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .more-videos-grid::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+        .more-videos-grid::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -247,19 +320,29 @@
         <h1>🎬 Dotyk Publisher</h1>
         <p class="subtitle">NÜA Barcelona - Performance Show</p>
 
-        <!-- Video Fijo -->
         <div class="card">
-            <h2>📺 Video</h2>
-            <div class="video-info">
-                <img id="videoPreview" src="https://irtperformanceshoweu.blob.core.windows.net/dotykcloudperformanceshow/TjjjnxxQQoY1LjkrR1Seb07UGB_noKAIzLzGhHP2gwnHZUfkGMJAfbhtqtfW" alt="Preview">
-                <div class="video-details">
-                    <h3 id="videoName">CUMPLE GENERAL</h3>
-                    <span>Video predefinido</span>
+            <h2>📺 Selecciona Video</h2>
+            <div id="selectedVideo" class="selected-video" style="display: none;">
+                <div class="icon" id="selectedIcon">🎂</div>
+                <div class="info">
+                    <h3 id="selectedName">-</h3>
+                    <span>Video seleccionado</span>
+                </div>
+            </div>
+
+            <div class="quick-videos" id="quickVideos"></div>
+
+            <div class="more-videos-container">
+                <button class="more-videos-toggle" onclick="toggleMoreVideos()">
+                    <span>📁 Más videos...</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="more-videos-dropdown" id="moreVideosDropdown">
+                    <div class="more-videos-grid" id="moreVideosGrid"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Selector de Mesas -->
         <div class="card">
             <h2>🪑 Selecciona Mesas</h2>
             <div class="quick-actions">
@@ -268,13 +351,10 @@
                 <button onclick="selectRange(7,12)">7-12</button>
                 <button onclick="selectRange(13,18)">13-18</button>
             </div>
-            <div class="mesas-grid" id="mesasGrid">
-                <!-- Mesas generadas por JS -->
-            </div>
+            <div class="mesas-grid" id="mesasGrid"></div>
             <div class="counter" id="counter">Selecciona las mesas donde publicar</div>
         </div>
 
-        <!-- Botón Publicar -->
         <div class="card">
             <button class="btn btn-primary" id="publishBtn" onclick="publish()" disabled>
                 🚀 PUBLICAR
@@ -283,213 +363,218 @@
         </div>
 
         <div class="footer">
-            Conectado a eu.performanceshow.dotyk.cloud
+            Conectado a Dotyk Performance Show
         </div>
     </div>
 
     <script>
-        // ============ CONFIGURACIÓN ============
-        const CONFIG = {
-            // Template predefinido
-            TEMPLATE_ID: "2692b1ad-d9c7-4596-9108-20e7525bf3a5",
-            TEMPLATE_NAME: "CUMPLE GENERAL",
+        const BASE_URL = "https://irtperformanceshoweu.blob.core.windows.net/dotykcloudperformanceshow/";
 
-            // API endpoint (via proxy local para evitar CORS)
-            API_URL: "/api/template",
+        const QUICK_VIDEOS = [
+            { id: "1qfl_FzhVSQfWSsQ6uBLxswJV9x4_BbeV22KojBIMOwxJAD4CGPWPwFnFf8m", name: "CUMPLE GENERAL", icon: "🎂" },
+            { id: "3qIll9Wlan7lvnHmGHCHfkCFccbd6YLqtoxDAi3CHanj4ZMNYgcAD2vxBtMd", name: "TIEMPO AGOTADO", icon: "⏰" },
+            { id: "Sa1XOxcY_ytPez8aein6Hy4YLWYxeLuqSF1SG43hFQ_ivKK1P_pErXcRLf37", name: "VOLUMEN ELEVADO", icon: "🔊" },
+            { id: "WxLLkbKYsA2uLjVvvhhDG8dgypnPotBB0qN1zqvNHK2CLB1mAi6WLv8OUfm3", name: "RETRASOS", icon: "⏳" },
+            { id: "SuGs0x4OaOzF_W9AIi_OYr7OVm2EsUf39u_HmiGDG3Wze0kZJCLQbgAYoGlp", name: "SHHHHH", icon: "🤫" }
+        ];
 
-            // Mesas (IDs reales del sistema)
-            MESAS: [
-                { id: "239", name: "1" },
-                { id: "240", name: "2" },
-                { id: "241", name: "3" },
-                { id: "235", name: "4" },
-                { id: "227", name: "5" },
-                { id: "229", name: "6" },
-                { id: "225", name: "7" },
-                { id: "231", name: "8" },
-                { id: "234", name: "9" },
-                { id: "228", name: "10" },
-                { id: "226", name: "11" },
-                { id: "232", name: "12" },
-                { id: "223", name: "13" },
-                { id: "230", name: "14" },
-                { id: "224", name: "15" },
-                { id: "237", name: "16" },
-                { id: "342", name: "17" },
-                { id: "356", name: "18" }
-            ]
-        };
+        const MORE_VIDEOS = [
+            { id: "4RwbgS0krw8W4MUCaatGs4mltolJYa7qO2jpgVtIb-YeTswBGwnnx1WWx3zB", name: "CUMPLE NUA", icon: "🎉" },
+            { id: "32dg9T2c4VDdgz911Ont8-7KCivXhaAtWY_qqEbBdmpntgvZ-183MOXKQXo5", name: "Simulación juego", icon: "🎮" },
+            { id: "QHdpsxolVKtBKrvI3GRMELI6YCuFWk4RlkoIOPExlR8q3KwfOX-8DBvZODAi", name: "SCREAM", icon: "😱" },
+            { id: "y4_Oc92qpCLg30XkrrRpEMdz7Kepy9WRAXJEA9RQI5qskmjwqG4yMLwEbXkp", name: "FREDDY", icon: "🔪" },
+            { id: "foMwA4gNRlWtBOb32bvSokNNhWwcGIoNaDcQmq1Y2l48qU9Gfw4s-mvWYRfZ", name: "SIERRA SCREAM", icon: "🪚" },
+            { id: "FcyXBaU-VbDnpQ1prcngwKQnTqrmlcOoFR3_bfc_Zs2307XyzKq7CUvrhRLS", name: "SILLA EXORCISTA", icon: "👻" },
+            { id: "bFeZGewRT-zGZ_hDkmAeeN6abb0XVm_bKutJSEVrPzMk5ahM1dERN6a-5JSC", name: "CAMPANITA", icon: "🔔" },
+            { id: "InJUQAwi8Q_5KTUAj6O4cB3XaStsogyliiUZ3L-feXUGQlsrqYeRQodogKIb", name: "CASA ZOMBIE", icon: "🧟" },
+            { id: "LImnGasDp-MdYtRNIoLyeutF9KyqaeHcMWW5eXdHTFVOBn_0ML0gTC8a1BRD", name: "NIÑA CABELLO", icon: "👧" },
+            { id: "2xUqdAwgP3eu90yiJPGZYnTYyVipJ5oAXqR1dSIDSHj9QqYM4BuLUdQj6myj", name: "VENTANA LLAMADA", icon: "🪟" },
+            { id: "3M09y8w-8TCP6kujptBPoMP9X4KbQ4M2aSxIBv3lTvK01rmQt1l2s0TwWzzg", name: "RESIDENT EVIL", icon: "🎯" },
+            { id: "tx1DHCGxdsEsFwvNsszqtaLx5JJK3cfRvFCKkI4AEtI9mGFUHhHeq-OTgB4T", name: "Navidad Horror", icon: "🎄" },
+            { id: "0t8r-4SIcKPoUMFcSNT83BWbywzolABeYwXRNKu3LUKAtU4sZNRefy17YyLF", name: "Chica llamada", icon: "📞" },
+            { id: "1H8mBGCoEvWjXTxIU-8KaQTUKssDeSynmkn0vC9P1kSV60M5b0wj-lYl5WNm", name: "please open", icon: "🚪" },
+            { id: "s1rZwOx1y_C9zAo20cVXmg0PVCUzBk774oefHUIZ4QZmoalCdqaTWlWVegOx", name: "CUMPLE MESA 17", icon: "🎂" },
+            { id: "9HhAtVLKu5LbVE3jZYwYQt6L0jidSm6-l9TWHoSV1UItFV6mxlwm6Am9nAQk", name: "imagenes terrorificas", icon: "💀" }
+        ];
 
-        // Estado
+        const ALL_VIDEOS = [...QUICK_VIDEOS, ...MORE_VIDEOS];
+
+        const MESAS = [
+            { id: 239, name: "1" }, { id: 240, name: "2" }, { id: 241, name: "3" },
+            { id: 235, name: "4" }, { id: 227, name: "5" }, { id: 229, name: "6" },
+            { id: 225, name: "7" }, { id: 231, name: "8" }, { id: 234, name: "9" },
+            { id: 228, name: "10" }, { id: 226, name: "11" }, { id: 222, name: "12" },
+            { id: 223, name: "13" }, { id: 230, name: "14" }, { id: 224, name: "15" },
+            { id: 237, name: "16" }, { id: 342, name: "17" }, { id: 356, name: "18" }
+        ];
+
+        let selectedVideo = null;
         let selectedMesas = new Set();
 
-        // ============ INICIALIZACIÓN ============
         document.addEventListener('DOMContentLoaded', () => {
+            renderQuickVideos();
+            renderMoreVideos();
             renderMesas();
         });
 
-        function renderMesas() {
-            const grid = document.getElementById('mesasGrid');
-            const mesasHTML = CONFIG.MESAS.map(mesa => `
-                <button class="mesa-btn" data-id="${mesa.id}" onclick="toggleMesa('${mesa.id}')">
-                    ${mesa.name}
-                </button>
-            `).join('');
-
-            grid.innerHTML = `
-                <button class="mesa-btn select-all-btn" data-id="All" onclick="toggleMesa('All')">
-                    ✨ TODAS
-                </button>
-                ${mesasHTML}
-            `;
+        function renderQuickVideos() {
+            const grid = document.getElementById('quickVideos');
+            grid.innerHTML = QUICK_VIDEOS.map((video) => \`
+                <div class="video-card" data-video-id="\${video.id}" onclick="selectVideoById('\${video.id}')">
+                    <div class="icon">\${video.icon}</div>
+                    <div class="name">\${video.name}</div>
+                </div>
+            \`).join('');
         }
 
-        // ============ SELECCIÓN ============
+        function renderMoreVideos() {
+            const grid = document.getElementById('moreVideosGrid');
+            grid.innerHTML = MORE_VIDEOS.map((video) => \`
+                <div class="video-card" data-video-id="\${video.id}" onclick="selectVideoById('\${video.id}')">
+                    <div class="icon">\${video.icon}</div>
+                    <div class="name">\${video.name}</div>
+                </div>
+            \`).join('');
+        }
+
+        function toggleMoreVideos() {
+            const btn = document.querySelector('.more-videos-toggle');
+            const dropdown = document.getElementById('moreVideosDropdown');
+            btn.classList.toggle('open');
+            dropdown.classList.toggle('show');
+        }
+
+        function selectVideoById(videoId) {
+            selectedVideo = ALL_VIDEOS.find(v => v.id === videoId);
+            if (!selectedVideo) return;
+
+            document.querySelectorAll('.video-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.videoId === videoId);
+            });
+
+            document.getElementById('selectedVideo').style.display = 'flex';
+            document.getElementById('selectedIcon').textContent = selectedVideo.icon;
+            document.getElementById('selectedName').textContent = selectedVideo.name;
+
+            updatePublishBtn();
+        }
+
+        function renderMesas() {
+            const grid = document.getElementById('mesasGrid');
+            grid.innerHTML = \`
+                <button class="mesa-btn select-all-btn" onclick="toggleAll()">✨ TODAS</button>
+                \${MESAS.map(mesa => \`
+                    <button class="mesa-btn" data-id="\${mesa.id}" onclick="toggleMesa(\${mesa.id})">\${mesa.name}</button>
+                \`).join('')}
+            \`;
+        }
+
         function toggleMesa(id) {
-            const btn = document.querySelector(`[data-id="${id}"]`);
-
-            if (id === 'All') {
-                if (selectedMesas.has('All')) {
-                    selectedMesas.clear();
-                    document.querySelectorAll('.mesa-btn').forEach(b => b.classList.remove('selected'));
-                } else {
-                    selectedMesas.clear();
-                    selectedMesas.add('All');
-                    document.querySelectorAll('.mesa-btn').forEach(b => b.classList.remove('selected'));
-                    btn.classList.add('selected');
-                }
+            if (selectedMesas.has(id)) {
+                selectedMesas.delete(id);
             } else {
-                selectedMesas.delete('All');
-                document.querySelector('[data-id="All"]').classList.remove('selected');
-
-                if (selectedMesas.has(id)) {
-                    selectedMesas.delete(id);
-                    btn.classList.remove('selected');
-                } else {
-                    selectedMesas.add(id);
-                    btn.classList.add('selected');
-                }
+                selectedMesas.add(id);
             }
+            updateUI();
+        }
 
-            updateCounter();
+        function toggleAll() {
+            if (selectedMesas.size === MESAS.length) {
+                selectedMesas.clear();
+            } else {
+                MESAS.forEach(m => selectedMesas.add(m.id));
+            }
+            updateUI();
         }
 
         function selectNone() {
             selectedMesas.clear();
-            document.querySelectorAll('.mesa-btn').forEach(b => b.classList.remove('selected'));
-            updateCounter();
+            updateUI();
         }
 
         function selectRange(start, end) {
             selectNone();
-            CONFIG.MESAS.forEach(mesa => {
+            MESAS.forEach(mesa => {
                 const num = parseInt(mesa.name);
                 if (num >= start && num <= end) {
                     selectedMesas.add(mesa.id);
-                    document.querySelector(`[data-id="${mesa.id}"]`).classList.add('selected');
                 }
             });
-            updateCounter();
+            updateUI();
         }
 
-        function updateCounter() {
+        function updateUI() {
+            MESAS.forEach(mesa => {
+                const btn = document.querySelector(\`[data-id="\${mesa.id}"]\`);
+                if (btn) btn.classList.toggle('selected', selectedMesas.has(mesa.id));
+            });
+
+            const allBtn = document.querySelector('.select-all-btn');
+            allBtn.classList.toggle('selected', selectedMesas.size === MESAS.length);
+
             const count = selectedMesas.size;
             const counter = document.getElementById('counter');
-            const btn = document.getElementById('publishBtn');
-
-            if (selectedMesas.has('All')) {
-                counter.textContent = '✨ Todas las mesas seleccionadas';
-            } else if (count === 0) {
+            if (count === 0) {
                 counter.textContent = 'Selecciona las mesas donde publicar';
+            } else if (count === MESAS.length) {
+                counter.textContent = '✨ Todas las mesas seleccionadas';
             } else {
-                counter.textContent = `${count} mesa${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`;
+                counter.textContent = \`\${count} mesa\${count !== 1 ? 's' : ''} seleccionada\${count !== 1 ? 's' : ''}\`;
             }
 
-            btn.disabled = count === 0;
+            updatePublishBtn();
         }
 
-        // ============ PUBLICAR ============
-        async function publish() {
+        function updatePublishBtn() {
             const btn = document.getElementById('publishBtn');
-            const status = document.getElementById('status');
+            btn.disabled = !selectedVideo || selectedMesas.size === 0;
+        }
 
+        async function publish() {
+            if (!selectedVideo || selectedMesas.size === 0) return;
+
+            const btn = document.getElementById('publishBtn');
             btn.disabled = true;
             btn.textContent = '⏳ Publicando...';
-            showStatus('Enviando a las mesas...', 'loading');
+            showStatus(\`Enviando "\${selectedVideo.name}" a \${selectedMesas.size} mesa(s)...\`, 'loading');
 
             selectedMesas.forEach(id => {
-                const mesaBtn = document.querySelector(`[data-id="${id}"]`);
+                const mesaBtn = document.querySelector(\`[data-id="\${id}"]\`);
                 if (mesaBtn) mesaBtn.classList.add('publishing');
             });
 
             try {
-                const tables = [];
-
-                if (selectedMesas.has('All')) {
-                    tables.push({
-                        id: null,
-                        index: 0,
-                        item: { tableId: "All" }
-                    });
-                } else {
-                    let index = 0;
-                    selectedMesas.forEach(tableId => {
-                        tables.push({
-                            id: null,
-                            index: index++,
-                            item: { tableId: tableId }
-                        });
-                    });
-                }
-
-                const payload = {
-                    id: CONFIG.TEMPLATE_ID,
-                    tables: tables,
-                    type: "Template"
-                };
-
-                console.log('Enviando:', payload);
-
-                const response = await fetch(CONFIG.API_URL, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': '*/*'
-                    },
-                    body: JSON.stringify(payload)
+                const videoUrl = BASE_URL + selectedVideo.id;
+                const response = await fetch('/api/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tables: Array.from(selectedMesas),
+                        videoUrl: videoUrl
+                    })
                 });
 
-                if (response.ok) {
-                    showStatus('✅ ¡Publicado correctamente!', 'success');
+                const result = await response.json();
 
+                if (response.ok) {
+                    showStatus(\`✅ "\${selectedVideo.name}" publicado en \${selectedMesas.size} mesa(s)!\`, 'success');
                     selectedMesas.forEach(id => {
-                        const mesaBtn = document.querySelector(`[data-id="${id}"]`);
+                        const mesaBtn = document.querySelector(\`[data-id="\${id}"]\`);
                         if (mesaBtn) {
                             mesaBtn.classList.remove('publishing');
-                            mesaBtn.classList.add('success');
+                            mesaBtn.classList.add('selected');
                         }
                     });
-
-                    setTimeout(() => {
-                        document.querySelectorAll('.mesa-btn').forEach(b => {
-                            b.classList.remove('success', 'error');
-                        });
-                    }, 3000);
-
                 } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    throw new Error(result.error || 'Error desconocido');
                 }
 
             } catch (error) {
                 console.error('Error:', error);
-                showStatus(`❌ Error: ${error.message}`, 'error');
-
+                showStatus(\`❌ Error: \${error.message}\`, 'error');
                 selectedMesas.forEach(id => {
-                    const mesaBtn = document.querySelector(`[data-id="${id}"]`);
-                    if (mesaBtn) {
-                        mesaBtn.classList.remove('publishing');
-                        mesaBtn.classList.add('error');
-                    }
+                    const mesaBtn = document.querySelector(\`[data-id="\${id}"]\`);
+                    if (mesaBtn) mesaBtn.classList.remove('publishing');
                 });
             }
 
@@ -500,7 +585,7 @@
         function showStatus(message, type) {
             const status = document.getElementById('status');
             status.textContent = message;
-            status.className = `status show ${type}`;
+            status.className = \`status show \${type}\`;
         }
     </script>
 </body>
