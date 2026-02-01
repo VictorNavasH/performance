@@ -6,6 +6,10 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/menus.py",
+      "use": "@vercel/python"
+    },
+    {
       "src": "index.html",
       "use": "@vercel/static"
     }
@@ -14,6 +18,10 @@
     {
       "src": "/api/publish",
       "dest": "/api/publish.py"
+    },
+    {
+      "src": "/api/menus",
+      "dest": "/api/menus.py"
     },
     {
       "src": "/api/template",

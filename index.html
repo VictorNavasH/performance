@@ -3,12 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NÜA Performance Show</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NÜA Control Center</title>
     <style>
         * {
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -17,6 +18,7 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             color: white;
+            overflow-x: hidden;
         }
 
         .container {
@@ -43,6 +45,7 @@
             padding: 24px;
             margin-bottom: 20px;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .card h2 {
@@ -51,216 +54,34 @@
             color: #227c9d;
         }
 
-        .quick-videos {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .video-card {
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 12px 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-
-        .video-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .video-card.selected {
-            background: rgba(34, 124, 157, 0.2);
-            border-color: #227c9d;
-        }
-
-        .video-card .thumb {
+        /* --- UI Components --- */
+        .btn {
             width: 100%;
-            aspect-ratio: 16/9;
-            margin-bottom: 6px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: #000;
-        }
-
-        .video-card .name {
-            font-size: 10px;
-            font-weight: 600;
-            line-height: 1.2;
-            height: 2.4em;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-
-        .more-videos-container {
-            margin-top: 12px;
-        }
-
-        .more-videos-toggle {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: rgba(255, 255, 255, 0.8);
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .more-videos-toggle:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .more-videos-toggle .arrow {
-            transition: transform 0.3s;
-        }
-
-        .more-videos-toggle.open .arrow {
-            transform: rotate(180deg);
-        }
-
-        .more-videos-dropdown {
-            display: none;
-            margin-top: 12px;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-        }
-
-        .more-videos-dropdown.show {
-            display: block;
-        }
-
-        .more-videos-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-
-        .selected-video {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px;
-            background: rgba(34, 124, 157, 0.15);
-            border: 2px solid #227c9d;
+            padding: 18px;
+            border: none;
             border-radius: 12px;
-            margin-bottom: 16px;
-        }
-
-        .selected-video .thumb {
-            width: 120px;
-            aspect-ratio: 16/9;
-            border-radius: 8px;
-            object-fit: cover;
-            background: #000;
-        }
-
-        .selected-video .info h3 {
-            margin: 0 0 4px 0;
-            font-size: 16px;
-            color: #227c9d;
-        }
-
-        .selected-video .info span {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .mesas-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-        }
-
-        .mesa-btn {
-            aspect-ratio: 1;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .mesa-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-
-        .mesa-btn.selected {
-            background: #227c9d;
-            border-color: #227c9d;
-            color: #1a1a2e;
-        }
-
-        .mesa-btn.publishing {
-            background: #3b82f6;
-            border-color: #3b82f6;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.6;
-            }
-        }
-
-        .select-all-btn {
-            grid-column: span 6;
-            aspect-ratio: auto;
-            padding: 12px;
-            font-size: 14px;
-            background: rgba(34, 124, 157, 0.2);
-            border-color: #227c9d;
-        }
-
-        .select-all-btn.selected {
-            background: #227c9d;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 18px;
-            border: none;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
+            gap: 10px;
         }
 
         .btn-primary {
             background: #227c9d;
-            color: #1a1a2e;
+            color: white;
         }
 
         .btn-primary:hover {
             background: #1a627d;
-            transform: scale(1.02);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
         }
 
         .btn-primary:disabled {
@@ -276,6 +97,7 @@
             border-radius: 8px;
             margin-top: 16px;
             display: none;
+            font-size: 14px;
         }
 
         .status.show {
@@ -297,83 +119,477 @@
             color: #3b82f6;
         }
 
-        .quick-actions {
+        /* --- PIN Login Screen --- */
+        .login-screen {
             display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
         }
 
-        .quick-actions button {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            background: transparent;
-            color: rgba(255, 255, 255, 0.7);
-            cursor: pointer;
-            font-size: 12px;
+        .login-logo {
+            font-size: 48px;
+            margin-bottom: 8px;
+            color: #227c9d;
         }
 
-        .quick-actions button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .counter {
+        .login-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 4px;
             text-align: center;
-            margin-top: 12px;
-            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .login-title span {
+            color: #227c9d;
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.5);
             font-size: 14px;
+            margin-bottom: 28px;
         }
 
-        .footer {
+        .pin-dots {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .pin-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.2s;
+        }
+
+        .pin-dot.filled {
+            background: #227c9d;
+            border-color: #227c9d;
+        }
+
+        .pin-dot.error {
+            background: #ef4444;
+            border-color: #ef4444;
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-6px);
+            }
+
+            75% {
+                transform: translateX(6px);
+            }
+        }
+
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 300px;
+            width: 100%;
+            margin-bottom: 28px;
+        }
+
+        .pin-key {
+            aspect-ratio: 1;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-key:active {
+            transform: scale(0.95);
+            background: rgba(34, 124, 157, 0.3);
+        }
+
+        .pin-key.action {
+            font-size: 16px;
+            color: #227c9d;
+        }
+
+        .pin-key.delete {
+            color: #ef4444;
+            font-size: 16px;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        /* --- Mode Selector --- */
+        .mode-selector {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 70vh;
+            justify-content: center;
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .mode-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #227c9d;
+            transform: translateY(-3px);
+        }
+
+        .mode-card .icon {
+            font-size: 40px;
+        }
+
+        .mode-card .info h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .mode-card .info p {
+            margin: 5px 0 0 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- App Screens --- */
+        .app-screen {
+            display: none;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .header-row h1 {
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .role-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .role-badge.admin {
+            background: rgba(34, 124, 157, 0.2);
+            color: #227c9d;
+        }
+
+        .role-badge.camarero {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
+        /* Performance Show styles */
+        .quick-videos {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .video-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
             text-align: center;
-            margin-top: 20px;
-            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .video-card.selected {
+            border-color: #227c9d;
+            background: rgba(34, 124, 157, 0.2);
+        }
+
+        .video-card img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .video-card .name {
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.2;
+            height: 2.4em;
+            overflow: hidden;
+        }
+
+        .more-videos-container {
+            margin-top: 15px;
+        }
+
+        .more-videos-toggle {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .more-videos-dropdown {
+            display: none;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .more-videos-dropdown.show {
+            display: grid;
+        }
+
+        .mesas-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+
+        .mesa-btn {
+            aspect-ratio: 1;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .mesa-btn.selected {
+            background: #227c9d;
+            border-color: #227c9d;
+        }
+
+        /* Restaurant Mode Styles */
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-info h4 {
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .menu-info p {
+            margin: 4px 0 0 0;
             font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #227c9d;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        .back-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 20px;
+            opacity: 0.7;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>NÜA Performance Show</h1>
-        <p class="subtitle">NUA Barcelona - Performance Show</p>
-        <div class="card">
-            <h2>Selecciona Video</h2>
-            <div id="selectedVideo" class="selected-video" style="display: none;">
-                <img id="selectedThumb" class="thumb" src="" alt="Thumbnail">
+        <!-- 1. LOGIN SCREEN -->
+        <div class="login-screen" id="loginScreen">
+            <div class="login-logo">U</div>
+            <div class="login-title">NÜA <span>SMART KITCHEN</span></div>
+            <div class="login-subtitle">Introduce tu PIN</div>
+            <div class="pin-dots" id="pinDots">
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+            </div>
+            <div class="pin-pad">
+                <script>
+                    for (var i = 1; i <= 9; i++) document.write('<button class="pin-key" onclick="pinPress(\'' + i + '\')">' + i + '</button>');
+                </script>
+                <button class="pin-key action" onclick="pinClear()">C</button>
+                <button class="pin-key" onclick="pinPress('0')">0</button>
+                <button class="pin-key delete" onclick="pinDelete()">DEL</button>
+            </div>
+        </div>
+
+        <!-- 2. MODE SELECTOR -->
+        <div class="mode-selector" id="modeSelector">
+            <h1 id="welcomeUser">Bienvenido</h1>
+            <div class="mode-card" onclick="enterMode('performance')">
+                <div class="icon">🎬</div>
                 <div class="info">
-                    <h3 id="selectedName">-</h3><span>Video seleccionado</span>
+                    <h3>Performance Show</h3>
+                    <p>Control de vídeos en mesas</p>
                 </div>
             </div>
-            <div class="quick-videos" id="quickVideos"></div>
-            <div class="more-videos-container">
-                <button class="more-videos-toggle" onclick="toggleMoreVideos()">
-                    <span>Mas videos...</span><span class="arrow">V</span>
-                </button>
-                <div class="more-videos-dropdown" id="moreVideosDropdown">
-                    <div class="more-videos-grid" id="moreVideosGrid"></div>
+            <div class="mode-card" id="restaurantModeCard" onclick="enterMode('restaurant')">
+                <div class="icon">🍴</div>
+                <div class="info">
+                    <h3>Restaurant Control</h3>
+                    <p>Gestión de menús y cartas</p>
                 </div>
             </div>
+            <center><button class="logout-btn" onclick="logout()">Cerrar Sesión</button></center>
         </div>
-        <div class="card">
-            <h2>Selecciona Mesas</h2>
-            <div class="quick-actions">
-                <button onclick="selectNone()">Ninguna</button>
-                <button onclick="selectRange(1,6)">1-6</button>
-                <button onclick="selectRange(7,12)">7-12</button>
-                <button onclick="selectRange(13,18)">13-18</button>
+
+        <!-- 3. PERFORMANCE SHOW SCREEN -->
+        <div class="app-screen" id="performanceScreen">
+            <div class="header-row">
+                <button class="back-btn" onclick="showModeSelector()">← Volver</button>
+                <h1>Performance</h1>
+                <span id="roleBadgePerf" class="role-badge"></span>
             </div>
-            <div class="mesas-grid" id="mesasGrid"></div>
-            <div class="counter" id="counter">Selecciona las mesas donde publicar</div>
+
+            <div class="card">
+                <h2>Selecciona Video</h2>
+                <div class="quick-videos" id="quickVideos"></div>
+                <div class="more-videos-container" id="moreVideosContainer">
+                    <button class="more-videos-toggle" onclick="toggleMoreVideos()">
+                        <span>Más vídeos...</span><span>▼</span>
+                    </button>
+                    <div class="more-videos-dropdown" id="moreVideosDropdown"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Selecciona Mesas</h2>
+                <div class="quick-actions" style="display:flex; gap:5px; margin-bottom:10px;">
+                    <button class="back-btn" style="flex:1" onclick="selectRange(1,18)">Todas</button>
+                    <button class="back-btn" style="flex:1" onclick="selectNone()">Ninguna</button>
+                </div>
+                <div class="mesas-grid" id="mesasGrid"></div>
+            </div>
+
+            <div class="card">
+                <button class="btn btn-primary" id="publishBtn" onclick="publish()" disabled>🚀 PUBLICAR</button>
+                <div id="statusPub" class="status"></div>
+            </div>
         </div>
-        <div class="card">
-            <button class="btn btn-primary" id="publishBtn" onclick="publish()" disabled>PUBLICAR</button>
-            <div id="status" class="status"></div>
+
+        <!-- 4. RESTAURANT SCREEN -->
+        <div class="app-screen" id="restaurantScreen">
+            <div class="header-row">
+                <button class="back-btn" onclick="showModeSelector()">← Volver</button>
+                <h1>Restaurant</h1>
+                <span id="roleBadgeRest" class="role-badge"></span>
+            </div>
+
+            <div class="card">
+                <h2>Smart Menús</h2>
+                <div class="menu-list" id="menuList">
+                    <!-- Menús cargados por JS -->
+                </div>
+                <div id="statusRest" class="status"></div>
+            </div>
         </div>
-        <div class="footer">Conectado a Dotyk Performance Show</div>
     </div>
+
     <script>
         var THUMB_URL = "https://dotykpreviews.blob.core.windows.net/thumbnails/";
         var QUICK_VIDEOS = [
@@ -389,19 +605,15 @@
             { id: "QHdpsxolVKtBKrvI3GRMELI6YCuFWk4RlkoIOPExlR8q3KwfOX-8DBvZODAi", name: "SCREAM", thumb: "4oEzc4mDMEpUQAVxkkztHjImppSbRZnHAw6AXEJw" },
             { id: "y4_Oc92qpCLg30XkrrRpEMdz7Kepy9WRAXJEA9RQI5qskmjwqG4yMLwEbXkp", name: "FREDDY", thumb: "IAO7hV5ppQ2foBsAU6TIpxqVh9ZZfi1-fhoQ_sO2" },
             { id: "foMwA4gNRlWtBOb32bvSokNNhWwcGIoNaDcQmq1Y2l48qU9Gfw4s-mvWYRfZ", name: "SIERRA SCREAM", thumb: "IDM-3miCLhbiJ_L6DjxBZIYJMSj34GSWJ_13NtPE" },
-            { id: "FcyXBaU-VbDnpQ1prcngwKQnTqrmlcOoFR3_bfc_Zs2307XyzKq7CUvrhRLS", name: "SILLA EXORCISTA", thumb: "VrfuZwnDrHJBAmiA0ofk7nVC6oQzQZDgJzYU0rOJ" },
-            { id: "bFeZGewRT-zGZ_hDkmAeeN6abb0XVm_bKutJSEVrPzMk5ahM1dERN6a-5JSC", name: "CAMPANITA", thumb: "xfeUIkc9ziaV8c0nuW85sZ3wzZQ5erijzzxe8Sux" },
-            { id: "InJUQAwi8Q_5KTUAj6O4cB3XaStsogyliiUZ3L-feXUGQlsrqYeRQodogKIb", name: "CASA ZOMBIE", thumb: "uzs1QC9CxJ8pqzVrly5G2m97BJZWUpcd_K6AIA5n" },
-            { id: "LImnGasDp-MdYtRNIoLyeutF9KyqaeHcMWW5eXdHTFVOBn_0ML0gTC8a1BRD", name: "NINA CABELLO", thumb: "IWiW0NzdauJ9yy6kkzzpLiHbcuZig0zKbu3NthlV" },
-            { id: "2xUqdAwgP3eu90yiJPGZYnTYyVipJ5oAXqR1dSIDSHj9QqYM4BuLUdQj6myj", name: "VENTANA LLAMADA", thumb: "GzW3BGigGSSi2HKwZxeVhjeKd1HDDCbxsBR2d2jV" },
-            { id: "3M09y8w-8TCP6kujptBPoMP9X4KbQ4M2aSxIBv3lTvK01rmQt1l2s0TwWzzg", name: "RESIDENT EVIL", thumb: "7y6BRBUObk5mnGdy8C7Oep7b614ZTF69gKl7Fwu_" },
-            { id: "tx1DHCGxdsEsFwvNsszqtaLx5JJK3cfRvFCKkI4AEtI9mGFUHhHeq-OTgB4T", name: "Navidad Horror", thumb: "WKgfXXL_zx7IOw-h5RaEbq52cHWZu4hmS57WZF7l" },
-            { id: "0t8r-4SIcKPoUMFcSNT83BWbywzolABeYwXRNKu3LUKAtU4sZNRefy17YyLF", name: "Chica llamada", thumb: "YpLlEkZOq92CDy8EdGidAOUsplLJHGrp0RMWiUIv" },
-            { id: "1H8mBGCoEvWjXTxIU-8KaQTUKssDeSynmkn0vC9P1kSV60M5b0wj-lYl5WNm", name: "please open", thumb: "CR-uQAjODWuzYBo1iFTIw8U61iGxhpSwy0GJ_tne" },
-            { id: "s1rZwOx1y_C9zAo20cVXmg0PVCUzBk774oefHUIZ4QZmoalCdqaTWlWVegOx", name: "CUMPLE MESA 17", thumb: "TZ-FLFXPdbTwfYEwp8pEtGXMThN2_hl1WyLv79xj" },
-            { id: "9HhAtVLKu5LbVE3jZYwYQt6L0jidSm6-l9TWHoSV1UItFV6mxlwm6Am9nAQk", name: "imagenes terrorificas", thumb: "q9TT1GeZj327AxS-B1ilQog-twqUVssKP0_l3iFi" }
+            { id: "FcyXBaU-VbDnpQ1prcngwKQnTqrmlcOoFR3_bfc_Zs2307XyzKq7CUvrhRLS", name: "SILLA EXORCISTA", thumb: "VrfuZwnDrHJBAmiA0ofk7nVC6oQzQZDgJzYU0rOJ" }
         ];
-        var ALL_VIDEOS = QUICK_VIDEOS.concat(MORE_VIDEOS);
+        var RESTAURANT_MENUS = [
+            { id: "7b2ed65e-05c9-45b9-b7b9-adc83345cd5b", name: "Smart Menú: Poke edition" },
+            { id: "a61bbcb4-6efe-4be7-85f1-2d6c84adf564", name: "Smart Menú: Burger edition" },
+            { id: "782e61b7-9cc9-48e2-b5be-b78876692929", name: "Crea tu Smart Menú" },
+            { id: "338712fd-f2a9-463e-8532-6fa17c7ebe8e", name: "Smart Love Menú" },
+            { id: "4c394f20-e562-4ed5-aa2b-fa7a3ffbbc18", name: "Smart Menú: Business Edition" }
+        ];
         var MESAS = [
             { id: 239, name: "1" }, { id: 240, name: "2" }, { id: 241, name: "3" },
             { id: 235, name: "4" }, { id: 227, name: "5" }, { id: 229, name: "6" },
@@ -410,142 +622,154 @@
             { id: 223, name: "13" }, { id: 230, name: "14" }, { id: 224, name: "15" },
             { id: 237, name: "16" }, { id: 342, name: "17" }, { id: 356, name: "18" }
         ];
+
+        var currentPin = "";
+        var currentRole = null;
         var selectedVideo = null;
         var selectedMesas = new Set();
-        document.addEventListener("DOMContentLoaded", function () {
-            renderQuickVideos();
-            renderMoreVideos();
-            renderMesas();
-        });
-        function renderQuickVideos() {
-            var grid = document.getElementById("quickVideos");
-            var html = "";
-            for (var i = 0; i < QUICK_VIDEOS.length; i++) {
-                var v = QUICK_VIDEOS[i];
-                html += "<div class='video-card' data-video-id='" + v.id + "' onclick=\"selectVideoById('" + v.id + "')\">";
-                html += "<img class='thumb' src='" + THUMB_URL + v.thumb + "'>";
-                html += "<div class='name'>" + v.name + "</div></div>";
-            }
-            grid.innerHTML = html;
+
+        // 1. PIN LOGIC
+        function pinPress(d) {
+            if (currentPin.length < 4) { currentPin += d; updatePinDots(); if (currentPin.length == 4) validate(); }
         }
-        function renderMoreVideos() {
-            var grid = document.getElementById("moreVideosGrid");
-            var html = "";
-            for (var i = 0; i < MORE_VIDEOS.length; i++) {
-                var v = MORE_VIDEOS[i];
-                html += "<div class='video-card' data-video-id='" + v.id + "' onclick=\"selectVideoById('" + v.id + "')\">";
-                html += "<img class='thumb' src='" + THUMB_URL + v.thumb + "'>";
-                html += "<div class='name'>" + v.name + "</div></div>";
-            }
-            grid.innerHTML = html;
+        function pinDelete() { currentPin = currentPin.slice(0, -1); updatePinDots(); }
+        function pinClear() { currentPin = ""; updatePinDots(); }
+        function updatePinDots() {
+            var dots = document.querySelectorAll('.pin-dot');
+            for (var i = 0; i < 4; i++) dots[i].className = 'pin-dot' + (i < currentPin.length ? ' filled' : '');
         }
-        function toggleMoreVideos() {
-            var btn = document.querySelector(".more-videos-toggle");
-            var dropdown = document.getElementById("moreVideosDropdown");
-            btn.classList.toggle("open");
-            dropdown.classList.toggle("show");
-        }
-        function selectVideoById(videoId) {
-            for (var i = 0; i < ALL_VIDEOS.length; i++) {
-                if (ALL_VIDEOS[i].id === videoId) {
-                    selectedVideo = ALL_VIDEOS[i];
-                    break;
-                }
+        function validate() {
+            var roles = { "2020": "camarero", "9069": "admin" };
+            var role = roles[currentPin];
+            if (role) {
+                currentRole = role;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('modeSelector').style.display = 'flex';
+                document.getElementById('welcomeUser').textContent = 'Bienvenido, ' + (role == 'admin' ? 'Admin' : 'Equipo');
+                initApp();
+            } else {
+                document.querySelectorAll('.pin-dot').forEach(function (d) { d.classList.add('error'); });
+                setTimeout(pinClear, 500);
             }
-            if (!selectedVideo) return;
-            var cards = document.querySelectorAll(".video-card");
-            for (var j = 0; j < cards.length; j++) {
-                if (cards[j].getAttribute("data-video-id") === videoId) {
-                    cards[j].classList.add("selected");
-                } else {
-                    cards[j].classList.remove("selected");
-                }
-            }
-            document.getElementById("selectedVideo").style.display = "flex";
-            document.getElementById("selectedThumb").src = THUMB_URL + selectedVideo.thumb;
-            document.getElementById("selectedName").textContent = selectedVideo.name;
-            updatePublishBtn();
         }
-        function renderMesas() {
-            var grid = document.getElementById("mesasGrid");
-            var html = "<button class='mesa-btn select-all-btn' onclick='toggleAll()'>TODAS</button>";
-            for (var i = 0; i < MESAS.length; i++) {
-                var m = MESAS[i];
-                html += "<button class='mesa-btn' data-id='" + m.id + "' onclick='toggleMesa(" + m.id + ")'>" + m.name + "</button>";
-            }
-            grid.innerHTML = html;
+
+        // 2. NAVIGATION
+        function enterMode(mode) {
+            document.getElementById('modeSelector').style.display = 'none';
+            document.getElementById(mode + 'Screen').style.display = 'block';
         }
+        function showModeSelector() {
+            document.querySelectorAll('.app-screen').forEach(function (s) { s.style.display = 'none'; });
+            document.getElementById('modeSelector').style.display = 'flex';
+        }
+        function logout() { location.reload(); }
+
+        // 3. APP INIT
+        function initApp() {
+            // Apply role badges
+            var badgeText = currentRole == 'admin' ? 'Admin' : 'Camarero';
+            var badgeClass = 'role-badge ' + currentRole;
+            document.getElementById('roleBadgePerf').textContent = badgeText;
+            document.getElementById('roleBadgePerf').className = badgeClass;
+            document.getElementById('roleBadgeRest').textContent = badgeText;
+            document.getElementById('roleBadgeRest').className = badgeClass;
+
+            // Restrict "More videos" for camareros
+            if (currentRole == 'camarero') document.getElementById('moreVideosContainer').style.display = 'none';
+
+            renderPerformance();
+            renderRestaurant();
+        }
+
+        function renderPerformance() {
+            var qGrid = document.getElementById('quickVideos');
+            qGrid.innerHTML = QUICK_VIDEOS.map(function (v) {
+                return '<div class="video-card" onclick="selV(\'' + v.id + '\')"><img src="' + THUMB_URL + v.thumb + '"><div class="name">' + v.name + '</div></div>';
+            }).join('');
+
+            var mGrid = document.getElementById('moreVideosDropdown');
+            mGrid.innerHTML = MORE_VIDEOS.map(function (v) {
+                return '<div class="video-card" onclick="selV(\'' + v.id + '\')"><img src="' + THUMB_URL + v.thumb + '"><div class="name">' + v.name + '</div></div>';
+            }).join('');
+
+            var mGridMesas = document.getElementById('mesasGrid');
+            mGridMesas.innerHTML = MESAS.map(function (m) {
+                return '<button class="mesa-btn" data-id="' + m.id + '" onclick="toggleMesa(' + m.id + ')">' + m.name + '</button>';
+            }).join('');
+        }
+
+        function renderRestaurant() {
+            var list = document.getElementById('menuList');
+            list.innerHTML = RESTAURANT_MENUS.map(function (m) {
+                return '<div class="menu-item"><div class="menu-info"><h4>' + m.name + '</h4><p>ID: ...' + m.id.slice(-8) + '</p></div>' +
+                    '<label class="switch"><input type="checkbox" onchange="toggleMenu(\'' + m.id + '\', this.checked)"><span class="slider"></span></label></div>';
+            }).join('');
+        }
+
+        // 4. FUNCTIONALITY
+        function selV(id) {
+            selectedVideo = id;
+            document.querySelectorAll('.video-card').forEach(function (c) { c.classList.remove('selected'); });
+            event.currentTarget.classList.add('selected');
+            document.getElementById('publishBtn').disabled = false;
+        }
+
         function toggleMesa(id) {
-            if (selectedMesas.has(id)) { selectedMesas.delete(id); } else { selectedMesas.add(id); }
-            updateUI();
+            if (selectedMesas.has(id)) selectedMesas.delete(id); else selectedMesas.add(id);
+            document.querySelectorAll('.mesa-btn').forEach(function (b) {
+                b.classList.toggle('selected', selectedMesas.has(parseInt(b.dataset.id)));
+            });
         }
-        function toggleAll() {
-            if (selectedMesas.size === MESAS.length) { selectedMesas.clear(); } else { for (var i = 0; i < MESAS.length; i++) { selectedMesas.add(MESAS[i].id); } }
-            updateUI();
+
+        function selectRange(s, e) {
+            MESAS.forEach(function (m) { if (parseInt(m.name) >= s && parseInt(m.name) <= e) selectedMesas.add(m.id); });
+            toggleMesa(null);
         }
-        function selectNone() { selectedMesas.clear(); updateUI(); }
-        function selectRange(start, end) {
-            selectNone();
-            for (var i = 0; i < MESAS.length; i++) {
-                var num = parseInt(MESAS[i].name);
-                if (num >= start && num <= end) { selectedMesas.add(MESAS[i].id); }
-            }
-            updateUI();
-        }
-        function updateUI() {
-            for (var i = 0; i < MESAS.length; i++) {
-                var btn = document.querySelector("[data-id='" + MESAS[i].id + "']");
-                if (btn) {
-                    if (selectedMesas.has(MESAS[i].id)) { btn.classList.add("selected"); } else { btn.classList.remove("selected"); }
-                }
-            }
-            var allBtn = document.querySelector(".select-all-btn");
-            if (selectedMesas.size === MESAS.length) { allBtn.classList.add("selected"); } else { allBtn.classList.remove("selected"); }
-            var count = selectedMesas.size;
-            var counter = document.getElementById("counter");
-            if (count === 0) { counter.textContent = "Selecciona las mesas donde publicar"; }
-            else if (count === MESAS.length) { counter.textContent = "Todas las mesas seleccionadas"; }
-            else { counter.textContent = count + " mesas seleccionadas"; }
-            updatePublishBtn();
-        }
-        function updatePublishBtn() {
-            var btn = document.getElementById("publishBtn");
-            btn.disabled = !selectedVideo || selectedMesas.size === 0;
-        }
-        function publish() {
-            if (!selectedVideo || selectedMesas.size === 0) return;
-            var btn = document.getElementById("publishBtn");
+
+        function selectNone() { selectedMesas.clear(); toggleMesa(null); }
+
+        function toggleMoreVideos() { document.getElementById('moreVideosDropdown').classList.toggle('show'); }
+
+        async function publish() {
+            var btn = document.getElementById('publishBtn');
+            var status = document.getElementById('statusPub');
             btn.disabled = true;
-            btn.textContent = "Publicando...";
-            showStatus("Enviando " + selectedVideo.name + " a " + selectedMesas.size + " mesas...", "loading");
-            var ids = [];
-            selectedMesas.forEach(function (id) { ids.push(id); });
-            var videoUrl = "https://irtperformanceshoweu.blob.core.windows.net/dotykcloudperformanceshow/" + selectedVideo.id;
-            fetch("/api/publish", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tables: ids, videoUrl: videoUrl })
-            })
-                .then(function (response) { return response.json(); })
-                .then(function (result) {
-                    if (result.success) {
-                        showStatus("Publicado en " + selectedMesas.size + " mesas!", "success");
-                    } else {
-                        showStatus("Error: " + (result.error || "desconocido"), "error");
-                    }
-                })
-                .catch(function (error) {
-                    showStatus("Error: " + error.message, "error");
-                })
-                .finally(function () {
-                    btn.disabled = false;
-                    btn.textContent = "PUBLICAR";
+            status.textContent = "Publicando..."; status.className = "status show loading";
+
+            try {
+                var res = await fetch('/api/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tables: Array.from(selectedMesas), videoUrl: "https://irtperformanceshoweu.blob.core.windows.net/dotykcloudperformanceshow/" + selectedVideo })
                 });
+                var data = await res.json();
+                if (data.success) {
+                    status.textContent = "✅ ¡Publicado!"; status.className = "status show success";
+                } else throw new Error(data.error);
+            } catch (e) {
+                status.textContent = "❌ Error: " + e.message; status.className = "status show error";
+            }
+            btn.disabled = false;
         }
-        function showStatus(message, type) {
-            var status = document.getElementById("status");
-            status.textContent = message;
-            status.className = "status show " + type;
+
+        async function toggleMenu(id, enabled) {
+            var status = document.getElementById('statusRest');
+            status.textContent = "Actualizando menú..."; status.className = "status show loading";
+            try {
+                var res = await fetch('/api/menus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ categoryId: id, isEnabled: enabled })
+                });
+                var data = await res.json();
+                if (data.success) {
+                    status.textContent = "✅ Menú " + (enabled ? "activado" : "desactivado");
+                    status.className = "status show success";
+                    setTimeout(function () { status.className = "status"; }, 2000);
+                } else throw new Error(data.error);
+            } catch (e) {
+                status.textContent = "❌ Error: " + e.message; status.className = "status show error";
+            }
         }
     </script>
 </body>
