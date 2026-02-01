@@ -76,14 +76,15 @@ class handler(BaseHTTPRequestHandler):
 
             try:
                 with urllib.request.urlopen(req, context=ssl_ctx(), timeout=15) as resp:
-                    self.send_json(200, {"success": True, "message": "OK"})
+                    resp_body = resp.read().decode()[:300]
+                    self.send_json(200, {"success": True, "message": "OK", "debug": {"sent": payload, "resp": resp_body}})
             except urllib.request.HTTPError as he:
                 body_err = ""
                 try:
                     body_err = he.read().decode()[:300]
                 except:
                     pass
-                self.send_json(500, {"success": False, "error": f"PATCH {he.code}: {body_err}"})
+                self.send_json(500, {"success": False, "error": f"PATCH {he.code}: {body_err}", "debug": {"sent": payload}})
 
         except Exception as e:
             self.send_json(500, {"success": False, "error": f"General: {str(e)}"})
