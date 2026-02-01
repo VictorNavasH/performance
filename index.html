@@ -607,6 +607,7 @@
             { id: "foMwA4gNRlWtBOb32bvSokNNhWwcGIoNaDcQmq1Y2l48qU9Gfw4s-mvWYRfZ", name: "SIERRA SCREAM", thumb: "IDM-3miCLhbiJ_L6DjxBZIYJMSj34GSWJ_13NtPE" },
             { id: "FcyXBaU-VbDnpQ1prcngwKQnTqrmlcOoFR3_bfc_Zs2307XyzKq7CUvrhRLS", name: "SILLA EXORCISTA", thumb: "VrfuZwnDrHJBAmiA0ofk7nVC6oQzQZDgJzYU0rOJ" }
         ];
+        var SMART_MENU_CATEGORY = { id: "7037dd01-8e70-4571-8857-6295f01c8862", name: "Smart Menús" };
         var RESTAURANT_MENUS = [
             { id: "7b2ed65e-05c9-45b9-b7b9-adc83345cd5b", name: "Smart Menú: Poke edition" },
             { id: "a61bbcb4-6efe-4be7-85f1-2d6c84adf564", name: "Smart Menú: Burger edition" },
@@ -700,10 +701,18 @@
 
         function renderRestaurant() {
             var list = document.getElementById('menuList');
-            list.innerHTML = RESTAURANT_MENUS.map(function (m) {
-                return '<div class="menu-item"><div class="menu-info"><h4>' + m.name + '</h4><p>ID: ...' + m.id.slice(-8) + '</p></div>' +
+            // Categoría padre (toggle principal)
+            var html = '<div class="menu-item" style="background:rgba(34,124,157,0.15);border:1px solid rgba(34,124,157,0.3)">' +
+                '<div class="menu-info"><h4 style="font-size:17px">📂 ' + SMART_MENU_CATEGORY.name + '</h4><p>Categoría principal</p></div>' +
+                '<label class="switch"><input type="checkbox" onchange="toggleMenu(\'' + SMART_MENU_CATEGORY.id + '\', this.checked)"><span class="slider"></span></label></div>';
+            // Separator
+            html += '<div style="border-top:1px solid rgba(255,255,255,0.1);margin:4px 0"></div>';
+            // Menús hijos
+            html += RESTAURANT_MENUS.map(function (m) {
+                return '<div class="menu-item" style="margin-left:12px"><div class="menu-info"><h4>' + m.name + '</h4><p>ID: ...' + m.id.slice(-8) + '</p></div>' +
                     '<label class="switch"><input type="checkbox" onchange="toggleMenu(\'' + m.id + '\', this.checked)"><span class="slider"></span></label></div>';
             }).join('');
+            list.innerHTML = html;
         }
 
         // 4. FUNCTIONALITY
