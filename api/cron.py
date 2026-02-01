@@ -8,7 +8,6 @@ except ImportError:
 
 CRON_SECRET = os.environ.get("CRON_SECRET", "")
 BLOB_TOKEN = os.environ.get("BLOB_READ_WRITE_TOKEN", "")
-BLOB_STORE_ID = os.environ.get("BLOB_STORE_ID", "")
 SCHEDULE_PATH = "schedule.json"
 
 # Dotyk API config (duplicated from menus.py for serverless isolation)
@@ -43,39 +42,49 @@ def get_madrid_now():
     # Fallback: CET = UTC+1 (doesn't handle DST perfectly)
     return datetime.now(timezone(timedelta(hours=1)))
 
-def blob_url():
-    if BLOB_STORE_ID:
-        return f"https://{BLOB_STORE_ID}.public.blob.vercel-storage.com/{SCHEDULE_PATH}"
+def get_store_id():
+    """Extract store ID from token: vercel_blob_rw_STOREID_..."""
+    parts = BLOB_TOKEN.split("_")
+    if len(parts) >= 4:
+        return parts[3]
     return None
 
 def read_schedule():
     default = {"enabled": False, "rules": [], "lastAction": None, "lastCronRun": None}
-    url = blob_url()
-    if not url:
+    if not BLOB_TOKEN:
+        return default
+
+    store_id = get_store_id()
+    if store_id:
         try:
-            req = urllib.request.Request(
-                f"{BLOB_API}?prefix={SCHEDULE_PATH}",
-                headers={"Authorization": f"Bearer {BLOB_TOKEN}"},
-                method="GET"
-            )
+            url = f"https://{store_id}.public.blob.vercel-storage.com/{SCHEDULE_PATH}"
+            req = urllib.request.Request(url)
             with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
-                data = json.loads(r.read().decode())
-                blobs = data.get("blobs", [])
-                if blobs:
-                    blob_file_url = blobs[0].get("url", "")
-                    if blob_file_url:
-                        req2 = urllib.request.Request(blob_file_url)
-                        with urllib.request.urlopen(req2, context=ssl_ctx(), timeout=10) as r2:
-                            return json.loads(r2.read().decode())
+                return json.loads(r.read().decode())
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return default
         except:
             pass
-        return default
+
     try:
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(
+            f"{BLOB_API}?prefix={SCHEDULE_PATH}",
+            headers={"Authorization": f"Bearer {BLOB_TOKEN}"},
+            method="GET"
+        )
         with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
-            return json.loads(r.read().decode())
+            data = json.loads(r.read().decode())
+            blobs = data.get("blobs", [])
+            if blobs:
+                blob_file_url = blobs[0].get("url", "")
+                if blob_file_url:
+                    req2 = urllib.request.Request(blob_file_url)
+                    with urllib.request.urlopen(req2, context=ssl_ctx(), timeout=10) as r2:
+                        return json.loads(r2.read().decode())
     except:
-        return default
+        pass
+    return default
 
 def write_schedule(schedule_data):
     body = json.dumps(schedule_data, ensure_ascii=False).encode("utf-8")
@@ -140,9 +149,8 @@ def should_be_enabled(schedule, now):
             start = rule.get("startTime", "00:00")
             end = rule.get("endTime", "23:59")
             if start <= current_time < end:
-                return True  # At least one rule says "enable now"
+                return True
 
-    # No rule matched = should be disabled
     return False
 
 
@@ -170,7 +178,6 @@ class handler(BaseHTTPRequestHandler):
             desired = should_be_enabled(schedule, now)
 
             if desired is None:
-                # Schedule is disabled, don't act
                 schedule["lastCronRun"] = now_str
                 write_schedule(schedule)
                 self.send_json(200, {"action": "none", "reason": "schedule disabled", "time": now_str})
@@ -180,13 +187,12 @@ class handler(BaseHTTPRequestHandler):
             last_action = schedule.get("lastAction")
 
             if desired_action == last_action:
-                # No state change needed
                 schedule["lastCronRun"] = now_str
                 write_schedule(schedule)
                 self.send_json(200, {"action": "none", "reason": f"already {desired_action}", "time": now_str})
                 return
 
-            # State change needed - PATCH all categories
+            # State change needed
             if not EMAIL or not PASSWORD:
                 self.send_json(500, {"error": "Dotyk credentials not configured"})
                 return

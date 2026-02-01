@@ -2,11 +2,9 @@ from http.server import BaseHTTPRequestHandler
 import json, os, ssl, urllib.request, urllib.parse
 
 BLOB_TOKEN = os.environ.get("BLOB_READ_WRITE_TOKEN", "")
-BLOB_STORE_ID = os.environ.get("BLOB_STORE_ID", "")
 SCHEDULE_PATH = "schedule.json"
 ADMIN_PIN = "9069"
 
-# Vercel Blob API base
 BLOB_API = "https://blob.vercel-storage.com"
 
 def ssl_ctx():
@@ -15,47 +13,53 @@ def ssl_ctx():
     ctx.verify_mode = ssl.CERT_NONE
     return ctx
 
-def blob_url():
-    """Build the full blob URL for schedule.json"""
-    if BLOB_STORE_ID:
-        return f"https://{BLOB_STORE_ID}.public.blob.vercel-storage.com/{SCHEDULE_PATH}"
+def get_store_id():
+    """Extract store ID from token: vercel_blob_rw_STOREID_..."""
+    parts = BLOB_TOKEN.split("_")
+    if len(parts) >= 4:
+        return parts[3]
     return None
 
 def read_schedule():
     """Read schedule from Vercel Blob. Returns default if not found."""
     default = {"enabled": False, "rules": [], "lastAction": None, "lastCronRun": None}
-    url = blob_url()
-    if not url:
-        # Try listing blobs to find the URL
-        try:
-            req = urllib.request.Request(
-                f"{BLOB_API}?prefix={SCHEDULE_PATH}",
-                headers={"Authorization": f"Bearer {BLOB_TOKEN}"},
-                method="GET"
-            )
-            with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
-                data = json.loads(r.read().decode())
-                blobs = data.get("blobs", [])
-                if blobs:
-                    blob_file_url = blobs[0].get("url", "")
-                    if blob_file_url:
-                        req2 = urllib.request.Request(blob_file_url)
-                        with urllib.request.urlopen(req2, context=ssl_ctx(), timeout=10) as r2:
-                            return json.loads(r2.read().decode())
-        except:
-            pass
+    if not BLOB_TOKEN:
         return default
 
+    # Method 1: Try direct URL from store ID
+    store_id = get_store_id()
+    if store_id:
+        try:
+            url = f"https://{store_id}.public.blob.vercel-storage.com/{SCHEDULE_PATH}"
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
+                return json.loads(r.read().decode())
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return default
+        except:
+            pass
+
+    # Method 2: Use list API to find blob URL
     try:
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(
+            f"{BLOB_API}?prefix={SCHEDULE_PATH}",
+            headers={"Authorization": f"Bearer {BLOB_TOKEN}"},
+            method="GET"
+        )
         with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
-            return json.loads(r.read().decode())
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return default
-        raise
+            data = json.loads(r.read().decode())
+            blobs = data.get("blobs", [])
+            if blobs:
+                blob_file_url = blobs[0].get("url", "")
+                if blob_file_url:
+                    req2 = urllib.request.Request(blob_file_url)
+                    with urllib.request.urlopen(req2, context=ssl_ctx(), timeout=10) as r2:
+                        return json.loads(r2.read().decode())
     except:
-        return default
+        pass
+
+    return default
 
 def write_schedule(schedule_data):
     """Write schedule JSON to Vercel Blob."""
@@ -100,7 +104,6 @@ class handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length)) if length else {}
 
-            # Verify admin PIN
             pin = body.get("pin", "")
             if pin != ADMIN_PIN:
                 self.send_json(403, {"error": "PIN incorrecto"})
@@ -111,7 +114,6 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             schedule = body.get("schedule", {})
-            # Validate structure
             if "rules" not in schedule:
                 schedule["rules"] = []
             if "enabled" not in schedule:
