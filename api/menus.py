@@ -69,8 +69,12 @@ class handler(BaseHTTPRequestHandler):
             opener = get_authenticated_opener()
 
             # PATCH to toggle isEnabled
-            url = f"{RESTAURANT_API}/api/Category/{category_id}"
-            patch_data = json.dumps({"isEnabled": is_enabled}).encode()
+            # Based on the screenshot, the endpoint name is just "Category"
+            url = f"{RESTAURANT_API}/api/Category"
+            patch_data = json.dumps({
+                "id": category_id,
+                "isEnabled": is_enabled
+            }).encode()
             req = urllib.request.Request(
                 url,
                 data=patch_data,
