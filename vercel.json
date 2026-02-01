@@ -10,6 +10,14 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/schedule.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/cron.py",
+      "use": "@vercel/python"
+    },
+    {
       "src": "index.html",
       "use": "@vercel/static"
     }
@@ -26,6 +34,14 @@
     {
       "src": "/api/template",
       "dest": "/api/publish.py"
+    },
+    {
+      "src": "/api/schedule",
+      "dest": "/api/schedule.py"
+    },
+    {
+      "src": "/api/cron",
+      "dest": "/api/cron.py"
     },
     {
       "src": "/(.*)",

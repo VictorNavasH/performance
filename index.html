@@ -493,6 +493,124 @@
             margin-top: 20px;
             opacity: 0.7;
         }
+
+        /* --- Schedule UI --- */
+        .day-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day-btn.selected {
+            background: #227c9d;
+            border-color: #227c9d;
+            color: white;
+        }
+
+        .schedule-rule {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 10px;
+        }
+
+        .schedule-rule .rule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .schedule-rule .rule-label {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .rule-time {
+            color: #227c9d;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .rule-days {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .rule-day {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .rule-day.active {
+            background: rgba(34, 124, 157, 0.3);
+            color: #227c9d;
+        }
+
+        .rule-day.inactive {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .rule-delete {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+        }
+
+        .schedule-form {
+            margin-top: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .schedule-form label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .schedule-form input[type="text"],
+        .schedule-form input[type="time"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .form-row > div {
+            flex: 1;
+        }
     </style>
 </head>
 
@@ -588,6 +706,68 @@
                 </div>
                 <div id="statusRest" class="status"></div>
             </div>
+
+            <!-- SCHEDULE CARD (Admin only) -->
+            <div class="card" id="scheduleCard" style="display:none">
+                <h2>Programacion Horaria</h2>
+                <p style="color:rgba(255,255,255,0.5);font-size:13px;margin:0 0 16px 0">
+                    Activa/desactiva menus automaticamente por dia y hora
+                </p>
+
+                <!-- Global on/off -->
+                <div class="menu-item" style="margin-bottom:16px">
+                    <div class="menu-info">
+                        <h4>Programacion activa</h4>
+                        <p id="scheduleStatus">Cargando...</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="scheduleEnabled" onchange="toggleScheduleEnabled()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Rules list -->
+                <div id="scheduleRules"></div>
+
+                <!-- Add rule button -->
+                <button class="btn btn-primary" style="margin-top:12px;padding:12px;font-size:14px"
+                        onclick="showAddRuleForm()">
+                    + Anadir Regla
+                </button>
+
+                <!-- Add rule form (hidden) -->
+                <div id="ruleForm" class="schedule-form" style="display:none">
+                    <h4 style="margin:0 0 12px 0;font-size:16px">Nueva Regla</h4>
+
+                    <div style="margin-bottom:12px">
+                        <label>Nombre</label>
+                        <input type="text" id="ruleName" placeholder="Ej: Menus Mediodia">
+                    </div>
+
+                    <div style="margin-bottom:12px">
+                        <label>Dias</label>
+                        <div id="daySelector" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Hora inicio</label>
+                            <input type="time" id="ruleStartTime" value="12:00">
+                        </div>
+                        <div>
+                            <label>Hora fin</label>
+                            <input type="time" id="ruleEndTime" value="15:30">
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:8px;margin-top:12px">
+                        <button class="btn btn-primary" style="padding:10px;font-size:14px" onclick="saveRule()">Guardar</button>
+                        <button class="back-btn" style="flex:1;padding:10px" onclick="cancelRuleForm()">Cancelar</button>
+                    </div>
+                </div>
+
+                <div id="statusSchedule" class="status" style="margin-top:12px"></div>
+            </div>
         </div>
     </div>
 
@@ -681,6 +861,12 @@
 
             renderPerformance();
             renderRestaurant();
+
+            // Show schedule card only for admin
+            if (currentRole === 'admin') {
+                document.getElementById('scheduleCard').style.display = 'block';
+                loadSchedule();
+            }
         }
 
         function renderPerformance() {
@@ -762,6 +948,180 @@
             btn.disabled = false;
         }
 
+        // ========== SCHEDULE FUNCTIONS ==========
+        var DAY_NAMES = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+        var DAY_FULL = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
+        var currentSchedule = { enabled: false, rules: [], lastAction: null, lastCronRun: null };
+        var selectedDays = new Set();
+
+        async function loadSchedule() {
+            try {
+                var res = await fetch('/api/schedule');
+                var data = await res.json();
+                currentSchedule = data;
+                renderSchedule();
+            } catch (e) {
+                document.getElementById('scheduleStatus').textContent = 'Error al cargar';
+            }
+        }
+
+        function renderSchedule() {
+            // Update global toggle
+            document.getElementById('scheduleEnabled').checked = currentSchedule.enabled;
+            var statusText = currentSchedule.enabled ? 'Activada' : 'Desactivada';
+            if (currentSchedule.lastCronRun) {
+                statusText += ' · Ultimo cron: ' + currentSchedule.lastCronRun;
+            }
+            document.getElementById('scheduleStatus').textContent = statusText;
+
+            // Render rules
+            var container = document.getElementById('scheduleRules');
+            if (!currentSchedule.rules || currentSchedule.rules.length === 0) {
+                container.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:13px;text-align:center;padding:12px 0">No hay reglas configuradas</p>';
+                return;
+            }
+            container.innerHTML = currentSchedule.rules.map(function (rule) {
+                var daysHtml = DAY_NAMES.map(function (d, i) {
+                    var active = rule.days && rule.days.indexOf(i) !== -1;
+                    return '<div class="rule-day ' + (active ? 'active' : 'inactive') + '">' + d + '</div>';
+                }).join('');
+                return '<div class="schedule-rule">' +
+                    '<div class="rule-header">' +
+                    '<span class="rule-label">' + (rule.label || 'Regla') + '</span>' +
+                    '<div style="display:flex;align-items:center;gap:8px">' +
+                    '<span class="rule-time">' + (rule.startTime || '') + ' - ' + (rule.endTime || '') + '</span>' +
+                    '<button class="rule-delete" onclick="deleteRule(\'' + rule.id + '\')" title="Eliminar">✕</button>' +
+                    '</div></div>' +
+                    '<div class="rule-days">' + daysHtml + '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function showAddRuleForm() {
+            selectedDays = new Set();
+            document.getElementById('ruleName').value = '';
+            document.getElementById('ruleStartTime').value = '12:00';
+            document.getElementById('ruleEndTime').value = '15:30';
+            document.getElementById('ruleForm').style.display = 'block';
+            renderDaySelector();
+        }
+
+        function cancelRuleForm() {
+            document.getElementById('ruleForm').style.display = 'none';
+        }
+
+        function renderDaySelector() {
+            var container = document.getElementById('daySelector');
+            container.innerHTML = DAY_NAMES.map(function (d, i) {
+                var sel = selectedDays.has(i) ? ' selected' : '';
+                return '<button type="button" class="day-btn' + sel + '" onclick="toggleDay(' + i + ')">' + d + '</button>';
+            }).join('');
+        }
+
+        function toggleDay(i) {
+            if (selectedDays.has(i)) selectedDays.delete(i); else selectedDays.add(i);
+            renderDaySelector();
+        }
+
+        async function saveRule() {
+            var name = document.getElementById('ruleName').value.trim();
+            var startTime = document.getElementById('ruleStartTime').value;
+            var endTime = document.getElementById('ruleEndTime').value;
+            var status = document.getElementById('statusSchedule');
+
+            if (!name) { status.textContent = '⚠️ Escribe un nombre'; status.className = 'status show error'; return; }
+            if (selectedDays.size === 0) { status.textContent = '⚠️ Selecciona al menos un dia'; status.className = 'status show error'; return; }
+            if (!startTime || !endTime) { status.textContent = '⚠️ Indica horario'; status.className = 'status show error'; return; }
+
+            var rule = {
+                id: 'rule-' + Date.now(),
+                label: name,
+                days: Array.from(selectedDays).sort(),
+                startTime: startTime,
+                endTime: endTime,
+                active: true
+            };
+
+            currentSchedule.rules = currentSchedule.rules || [];
+            currentSchedule.rules.push(rule);
+
+            status.textContent = 'Guardando...';
+            status.className = 'status show loading';
+
+            try {
+                var res = await fetch('/api/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: '9069', schedule: currentSchedule })
+                });
+                var data = await res.json();
+                if (data.error) throw new Error(data.error);
+                status.textContent = '✅ Regla guardada';
+                status.className = 'status show success';
+                cancelRuleForm();
+                renderSchedule();
+                setTimeout(function () { status.className = 'status'; }, 2000);
+            } catch (e) {
+                // Remove the rule we just added since save failed
+                currentSchedule.rules.pop();
+                status.textContent = '❌ Error: ' + e.message;
+                status.className = 'status show error';
+            }
+        }
+
+        async function deleteRule(ruleId) {
+            var status = document.getElementById('statusSchedule');
+            currentSchedule.rules = currentSchedule.rules.filter(function (r) { return r.id !== ruleId; });
+
+            status.textContent = 'Eliminando...';
+            status.className = 'status show loading';
+
+            try {
+                var res = await fetch('/api/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: '9069', schedule: currentSchedule })
+                });
+                var data = await res.json();
+                if (data.error) throw new Error(data.error);
+                status.textContent = '✅ Regla eliminada';
+                status.className = 'status show success';
+                renderSchedule();
+                setTimeout(function () { status.className = 'status'; }, 2000);
+            } catch (e) {
+                status.textContent = '❌ Error: ' + e.message;
+                status.className = 'status show error';
+                loadSchedule(); // Reload from server
+            }
+        }
+
+        async function toggleScheduleEnabled() {
+            var status = document.getElementById('statusSchedule');
+            currentSchedule.enabled = document.getElementById('scheduleEnabled').checked;
+
+            status.textContent = 'Guardando...';
+            status.className = 'status show loading';
+
+            try {
+                var res = await fetch('/api/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: '9069', schedule: currentSchedule })
+                });
+                var data = await res.json();
+                if (data.error) throw new Error(data.error);
+                status.textContent = '✅ Programacion ' + (currentSchedule.enabled ? 'activada' : 'desactivada');
+                status.className = 'status show success';
+                renderSchedule();
+                setTimeout(function () { status.className = 'status'; }, 2000);
+            } catch (e) {
+                status.textContent = '❌ Error: ' + e.message;
+                status.className = 'status show error';
+                loadSchedule();
+            }
+        }
+
+        // ========== MENU TOGGLE ==========
         async function toggleMenu(id, enabled) {
             var status = document.getElementById('statusRest');
             var isCategory = (id === SMART_MENU_CATEGORY.id);
