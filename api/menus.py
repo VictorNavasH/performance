@@ -1,11 +1,9 @@
 from http.server import BaseHTTPRequestHandler
-import json, os, ssl, urllib.request, http.cookiejar
+import json, os, ssl, urllib.request
 
 EMAIL = os.environ.get("DOTYK_EMAIL", "")
 PASSWORD = os.environ.get("DOTYK_PASSWORD", "")
 TOKEN_API = "https://dotyk.me/api/v1.2/token/password"
-PORTAL_LOGIN_API = "https://portal.dotyk.cloud/api/user/LoginWithDotykMe"
-PORTAL_TOKEN_API = "https://portal.dotyk.cloud/api/portal/token"
 RESTAURANT_API = "https://eu.restaurant.dotyk.cloud"
 VENUE = "nua-barcelona"
 
@@ -15,57 +13,23 @@ def ssl_ctx():
     ctx.verify_mode = ssl.CERT_NONE
     return ctx
 
-def get_restaurant_jwt():
-    # Paso 1: DotykMe Token
-    try:
-        req = urllib.request.Request(
-            TOKEN_API,
-            data=json.dumps({
-                "username": EMAIL, "password": PASSWORD,
-                "duration": "Long", "audience": "https://portal.dotyk.cloud/", "scope": ["basic"]
-            }).encode(),
-            headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"},
-            method="POST"
-        )
-        with urllib.request.urlopen(req, context=ssl_ctx(), timeout=15) as r:
-            token_data = json.loads(r.read().decode())
-            dotyk_token = token_data.get("token") or token_data.get("access_token")
-        if not dotyk_token:
-            return None, "Paso1: token vacio"
-    except Exception as e:
-        return None, f"Paso1-DotykMe: {str(e)}"
-
-    # Paso 2: Portal Login
-    try:
-        cj = http.cookiejar.CookieJar()
-        opener = urllib.request.build_opener(
-            urllib.request.HTTPCookieProcessor(cj),
-            urllib.request.HTTPSHandler(context=ssl_ctx())
-        )
-        req = urllib.request.Request(
-            PORTAL_LOGIN_API,
-            data=f'"{dotyk_token}"'.encode(),
-            headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"},
-            method="POST"
-        )
-        opener.open(req, timeout=15)
-    except Exception as e:
-        return None, f"Paso2-PortalLogin: {str(e)}"
-
-    # Paso 3: Restaurant JWT
-    try:
-        app_url = f"{RESTAURANT_API}/{VENUE}"
-        token_url = f"{PORTAL_TOKEN_API}?appUrl={urllib.request.quote(app_url, safe='')}"
-        req = urllib.request.Request(token_url, headers={"User-Agent": "Mozilla/5.0"}, method="GET")
-        with opener.open(req, timeout=15) as r:
-            portal_data = json.loads(r.read().decode())
-            restaurant_jwt = portal_data.get("token")
-        if not restaurant_jwt:
-            return None, f"Paso3: sin token, respuesta={json.dumps(portal_data)[:200]}"
-    except Exception as e:
-        return None, f"Paso3-PortalToken: {str(e)}"
-
-    return (restaurant_jwt, opener), None
+def get_restaurant_token():
+    """Pide token directamente a dotyk.me con audience del restaurante"""
+    req = urllib.request.Request(
+        TOKEN_API,
+        data=json.dumps({
+            "username": EMAIL,
+            "password": PASSWORD,
+            "duration": "Long",
+            "audience": f"{RESTAURANT_API}/",
+            "scope": ["caud", "basic"]
+        }).encode(),
+        headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"},
+        method="POST"
+    )
+    with urllib.request.urlopen(req, context=ssl_ctx(), timeout=15) as r:
+        token_data = json.loads(r.read().decode())
+        return token_data.get("token") or token_data.get("access_token")
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -86,13 +50,17 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json(500, {"success": False, "error": f"Sin credenciales. EMAIL={bool(EMAIL)} PASS={bool(PASSWORD)}"})
                 return
 
-            auth_result, err = get_restaurant_jwt()
-            if err:
-                self.send_json(500, {"success": False, "error": err})
+            # Paso 1: Token directo con audience del restaurante
+            try:
+                jwt_token = get_restaurant_token()
+                if not jwt_token:
+                    self.send_json(500, {"success": False, "error": "Token vacio de dotyk.me"})
+                    return
+            except Exception as e:
+                self.send_json(500, {"success": False, "error": f"Token: {str(e)}"})
                 return
 
-            jwt_token, opener = auth_result
-
+            # Paso 2: PATCH a la categoria
             url = f"{RESTAURANT_API}/{VENUE}/Category"
             payload = {"id": category_id, "isEnabled": is_enabled, "type": "Category"}
             req = urllib.request.Request(
@@ -107,7 +75,7 @@ class handler(BaseHTTPRequestHandler):
             )
 
             try:
-                with opener.open(req, timeout=15) as resp:
+                with urllib.request.urlopen(req, context=ssl_ctx(), timeout=15) as resp:
                     self.send_json(200, {"success": True, "message": "OK"})
             except urllib.request.HTTPError as he:
                 body_err = ""
@@ -115,7 +83,7 @@ class handler(BaseHTTPRequestHandler):
                     body_err = he.read().decode()[:300]
                 except:
                     pass
-                self.send_json(500, {"success": False, "error": f"PATCH: {he.code} - {body_err}"})
+                self.send_json(500, {"success": False, "error": f"PATCH {he.code}: {body_err}"})
 
         except Exception as e:
             self.send_json(500, {"success": False, "error": f"General: {str(e)}"})
