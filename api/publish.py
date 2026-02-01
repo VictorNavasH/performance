@@ -70,9 +70,9 @@ class handler(BaseHTTPRequestHandler):
             req = urllib.request.Request(url, data=json.dumps({"ApplicationName": "Dotyk.Extension.PerformanceShow", "Argument": f"-performaceUrl {video_url}", "StartOptions": {"IsForceFullScreenIfSupported": True}}).encode(), headers={"Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest"}, method="POST")
             opener.open(req, timeout=30)
             
-            self.send_json(200, {"status": "ok", "message": f"Publicado en {len(table_ids)} mesa(s)"})
+            self.send_json(200, {"success": True, "status": "ok", "message": f"Publicado en {len(table_ids)} mesa(s)"})
         except Exception as e:
-            self.send_json(500, {"error": str(e)})
+            self.send_json(500, {"success": False, "error": str(e)})
 
     def send_json(self, code, data):
         self.send_response(code)

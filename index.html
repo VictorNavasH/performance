@@ -5,346 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dotyk Publisher - NÜA</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        body {
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            color: white;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: rgba(255,255,255,0.6);
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .card {
-            background: rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .card h2 {
-            margin: 0 0 16px 0;
-            font-size: 18px;
-            color: #4ade80;
-        }
-
-        .quick-videos {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .video-card {
-            background: rgba(0,0,0,0.3);
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 12px 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-
-        .video-card:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.3);
-        }
-
-        .video-card.selected {
-            background: rgba(74, 222, 128, 0.2);
-            border-color: #4ade80;
-        }
-
-        .video-card .icon {
-            font-size: 1.8em;
-            margin-bottom: 6px;
-        }
-
-        .video-card .name {
-            font-size: 10px;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-
-        .more-videos-container {
-            margin-top: 12px;
-        }
-
-        .more-videos-toggle {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            color: rgba(255,255,255,0.8);
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .more-videos-toggle:hover {
-            background: rgba(255,255,255,0.1);
-        }
-
-        .more-videos-toggle .arrow {
-            transition: transform 0.3s;
-        }
-
-        .more-videos-toggle.open .arrow {
-            transform: rotate(180deg);
-        }
-
-        .more-videos-dropdown {
-            display: none;
-            margin-top: 12px;
-            padding: 12px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
-        }
-
-        .more-videos-dropdown.show {
-            display: block;
-        }
-
-        .more-videos-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            max-height: 250px;
-            overflow-y: auto;
-            padding-right: 8px;
-        }
-
-        .more-videos-grid .video-card .name {
-            font-size: 9px;
-        }
-
-        .selected-video {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px;
-            background: rgba(74, 222, 128, 0.15);
-            border: 2px solid #4ade80;
-            border-radius: 12px;
-            margin-bottom: 16px;
-        }
-
-        .selected-video .icon {
-            font-size: 2.5em;
-        }
-
-        .selected-video .info h3 {
-            margin: 0 0 4px 0;
-            font-size: 16px;
-            color: #4ade80;
-        }
-
-        .selected-video .info span {
-            font-size: 12px;
-            color: rgba(255,255,255,0.6);
-        }
-
-        .mesas-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-        }
-
-        .mesa-btn {
-            aspect-ratio: 1;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 12px;
-            background: rgba(255,255,255,0.05);
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .mesa-btn:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: rgba(255,255,255,0.4);
-        }
-
-        .mesa-btn.selected {
-            background: #4ade80;
-            border-color: #4ade80;
-            color: #1a1a2e;
-        }
-
-        .mesa-btn.publishing {
-            background: #3b82f6;
-            border-color: #3b82f6;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .select-all-btn {
-            grid-column: span 6;
-            aspect-ratio: auto;
-            padding: 12px;
-            font-size: 14px;
-            background: rgba(74, 222, 128, 0.2);
-            border-color: #4ade80;
-        }
-
-        .select-all-btn.selected {
-            background: #4ade80;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 18px;
-            border: none;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: #4ade80;
-            color: #1a1a2e;
-        }
-
-        .btn-primary:hover {
-            background: #22c55e;
-            transform: scale(1.02);
-        }
-
-        .btn-primary:disabled {
-            background: #444;
-            color: #888;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status {
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 16px;
-            display: none;
-        }
-
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { margin: 0; padding: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; color: white; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 10px; font-size: 24px; }
+        .subtitle { text-align: center; color: rgba(255,255,255,0.6); margin-bottom: 30px; font-size: 14px; }
+        .card { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; margin-bottom: 20px; backdrop-filter: blur(10px); }
+        .card h2 { margin: 0 0 16px 0; font-size: 18px; color: #4ade80; }
+        .quick-videos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px; }
+        .video-card { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .video-card:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+        .video-card.selected { background: rgba(74, 222, 128, 0.2); border-color: #4ade80; }
+        .video-card .icon { font-size: 1.8em; margin-bottom: 6px; }
+        .video-card .name { font-size: 10px; font-weight: 600; line-height: 1.2; }
+        .more-videos-container { margin-top: 12px; }
+        .more-videos-toggle { width: 100%; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .more-videos-toggle:hover { background: rgba(255,255,255,0.1); }
+        .more-videos-toggle .arrow { transition: transform 0.3s; }
+        .more-videos-toggle.open .arrow { transform: rotate(180deg); }
+        .more-videos-dropdown { display: none; margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .more-videos-dropdown.show { display: block; }
+        .more-videos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; }
+        .selected-video { display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(74, 222, 128, 0.15); border: 2px solid #4ade80; border-radius: 12px; margin-bottom: 16px; }
+        .selected-video .icon { font-size: 2.5em; }
+        .selected-video .info h3 { margin: 0 0 4px 0; font-size: 16px; color: #4ade80; }
+        .selected-video .info span { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .mesas-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+        .mesa-btn { aspect-ratio: 1; border: 2px solid rgba(255,255,255,0.2); border-radius: 12px; background: rgba(255,255,255,0.05); color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .mesa-btn:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
+        .mesa-btn.selected { background: #4ade80; border-color: #4ade80; color: #1a1a2e; }
+        .mesa-btn.publishing { background: #3b82f6; border-color: #3b82f6; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .select-all-btn { grid-column: span 6; aspect-ratio: auto; padding: 12px; font-size: 14px; background: rgba(74, 222, 128, 0.2); border-color: #4ade80; }
+        .select-all-btn.selected { background: #4ade80; }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #4ade80; color: #1a1a2e; }
+        .btn-primary:hover { background: #22c55e; transform: scale(1.02); }
+        .btn-primary:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
+        .status { text-align: center; padding: 12px; border-radius: 8px; margin-top: 16px; display: none; }
         .status.show { display: block; }
         .status.success { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
         .status.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
         .status.loading { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
-
-        .quick-actions {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .quick-actions button {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            background: transparent;
-            color: rgba(255,255,255,0.7);
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .quick-actions button:hover {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-
-        .counter {
-            text-align: center;
-            margin-top: 12px;
-            color: rgba(255,255,255,0.6);
-            font-size: 14px;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            color: rgba(255,255,255,0.4);
-            font-size: 12px;
-        }
-
-        .more-videos-grid::-webkit-scrollbar {
-            width: 6px;
-        }
-        .more-videos-grid::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-        }
-        .more-videos-grid::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
-            border-radius: 3px;
-        }
+        .quick-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+        .quick-actions button { flex: 1; padding: 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: transparent; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 12px; }
+        .quick-actions button:hover { background: rgba(255,255,255,0.1); color: white; }
+        .counter { text-align: center; margin-top: 12px; color: rgba(255,255,255,0.6); font-size: 14px; }
+        .footer { text-align: center; margin-top: 20px; color: rgba(255,255,255,0.4); font-size: 12px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎬 Dotyk Publisher</h1>
-        <p class="subtitle">NÜA Barcelona - Performance Show</p>
-
+        <h1>Dotyk Publisher</h1>
+        <p class="subtitle">NUA Barcelona - Performance Show</p>
         <div class="card">
-            <h2>📺 Selecciona Video</h2>
+            <h2>Selecciona Video</h2>
             <div id="selectedVideo" class="selected-video" style="display: none;">
-                <div class="icon" id="selectedIcon">🎂</div>
-                <div class="info">
-                    <h3 id="selectedName">-</h3>
-                    <span>Video seleccionado</span>
-                </div>
+                <div class="icon" id="selectedIcon"></div>
+                <div class="info"><h3 id="selectedName">-</h3><span>Video seleccionado</span></div>
             </div>
-
             <div class="quick-videos" id="quickVideos"></div>
-
             <div class="more-videos-container">
                 <button class="more-videos-toggle" onclick="toggleMoreVideos()">
-                    <span>📁 Más videos...</span>
-                    <span class="arrow">▼</span>
+                    <span>Mas videos...</span><span class="arrow">V</span>
                 </button>
                 <div class="more-videos-dropdown" id="moreVideosDropdown">
                     <div class="more-videos-grid" id="moreVideosGrid"></div>
                 </div>
             </div>
         </div>
-
         <div class="card">
-            <h2>🪑 Selecciona Mesas</h2>
+            <h2>Selecciona Mesas</h2>
             <div class="quick-actions">
                 <button onclick="selectNone()">Ninguna</button>
                 <button onclick="selectRange(1,6)">1-6</button>
@@ -354,52 +85,41 @@
             <div class="mesas-grid" id="mesasGrid"></div>
             <div class="counter" id="counter">Selecciona las mesas donde publicar</div>
         </div>
-
         <div class="card">
-            <button class="btn btn-primary" id="publishBtn" onclick="publish()" disabled>
-                🚀 PUBLICAR
-            </button>
+            <button class="btn btn-primary" id="publishBtn" onclick="publish()" disabled>PUBLICAR</button>
             <div id="status" class="status"></div>
         </div>
-
-        <div class="footer">
-            Conectado a Dotyk Performance Show
-        </div>
+        <div class="footer">Conectado a Dotyk Performance Show</div>
     </div>
-
     <script>
-        const BASE_URL = "https://irtperformanceshoweu.blob.core.windows.net/dotykcloudperformanceshow/";
-
-        const QUICK_VIDEOS = [
-            { id: "1qfl_FzhVSQfWSsQ6uBLxswJV9x4_BbeV22KojBIMOwxJAD4CGPWPwFnFf8m", name: "CUMPLE GENERAL", icon: "🎂" },
-            { id: "3qIll9Wlan7lvnHmGHCHfkCFccbd6YLqtoxDAi3CHanj4ZMNYgcAD2vxBtMd", name: "TIEMPO AGOTADO", icon: "⏰" },
-            { id: "Sa1XOxcY_ytPez8aein6Hy4YLWYxeLuqSF1SG43hFQ_ivKK1P_pErXcRLf37", name: "VOLUMEN ELEVADO", icon: "🔊" },
-            { id: "WxLLkbKYsA2uLjVvvhhDG8dgypnPotBB0qN1zqvNHK2CLB1mAi6WLv8OUfm3", name: "RETRASOS", icon: "⏳" },
-            { id: "SuGs0x4OaOzF_W9AIi_OYr7OVm2EsUf39u_HmiGDG3Wze0kZJCLQbgAYoGlp", name: "SHHHHH", icon: "🤫" }
+        var BASE_URL = "https://irtperformanceshoweu.blob.core.windows.net/dotykcloudperformanceshow/";
+        var QUICK_VIDEOS = [
+            { id: "1qfl_FzhVSQfWSsQ6uBLxswJV9x4_BbeV22KojBIMOwxJAD4CGPWPwFnFf8m", name: "CUMPLE GENERAL", icon: "C" },
+            { id: "3qIll9Wlan7lvnHmGHCHfkCFccbd6YLqtoxDAi3CHanj4ZMNYgcAD2vxBtMd", name: "TIEMPO AGOTADO", icon: "T" },
+            { id: "Sa1XOxcY_ytPez8aein6Hy4YLWYxeLuqSF1SG43hFQ_ivKK1P_pErXcRLf37", name: "VOLUMEN ELEVADO", icon: "V" },
+            { id: "WxLLkbKYsA2uLjVvvhhDG8dgypnPotBB0qN1zqvNHK2CLB1mAi6WLv8OUfm3", name: "RETRASOS", icon: "R" },
+            { id: "SuGs0x4OaOzF_W9AIi_OYr7OVm2EsUf39u_HmiGDG3Wze0kZJCLQbgAYoGlp", name: "SHHHHH", icon: "S" }
         ];
-
-        const MORE_VIDEOS = [
-            { id: "4RwbgS0krw8W4MUCaatGs4mltolJYa7qO2jpgVtIb-YeTswBGwnnx1WWx3zB", name: "CUMPLE NUA", icon: "🎉" },
-            { id: "32dg9T2c4VDdgz911Ont8-7KCivXhaAtWY_qqEbBdmpntgvZ-183MOXKQXo5", name: "Simulación juego", icon: "🎮" },
-            { id: "QHdpsxolVKtBKrvI3GRMELI6YCuFWk4RlkoIOPExlR8q3KwfOX-8DBvZODAi", name: "SCREAM", icon: "😱" },
-            { id: "y4_Oc92qpCLg30XkrrRpEMdz7Kepy9WRAXJEA9RQI5qskmjwqG4yMLwEbXkp", name: "FREDDY", icon: "🔪" },
-            { id: "foMwA4gNRlWtBOb32bvSokNNhWwcGIoNaDcQmq1Y2l48qU9Gfw4s-mvWYRfZ", name: "SIERRA SCREAM", icon: "🪚" },
-            { id: "FcyXBaU-VbDnpQ1prcngwKQnTqrmlcOoFR3_bfc_Zs2307XyzKq7CUvrhRLS", name: "SILLA EXORCISTA", icon: "👻" },
-            { id: "bFeZGewRT-zGZ_hDkmAeeN6abb0XVm_bKutJSEVrPzMk5ahM1dERN6a-5JSC", name: "CAMPANITA", icon: "🔔" },
-            { id: "InJUQAwi8Q_5KTUAj6O4cB3XaStsogyliiUZ3L-feXUGQlsrqYeRQodogKIb", name: "CASA ZOMBIE", icon: "🧟" },
-            { id: "LImnGasDp-MdYtRNIoLyeutF9KyqaeHcMWW5eXdHTFVOBn_0ML0gTC8a1BRD", name: "NIÑA CABELLO", icon: "👧" },
-            { id: "2xUqdAwgP3eu90yiJPGZYnTYyVipJ5oAXqR1dSIDSHj9QqYM4BuLUdQj6myj", name: "VENTANA LLAMADA", icon: "🪟" },
-            { id: "3M09y8w-8TCP6kujptBPoMP9X4KbQ4M2aSxIBv3lTvK01rmQt1l2s0TwWzzg", name: "RESIDENT EVIL", icon: "🎯" },
-            { id: "tx1DHCGxdsEsFwvNsszqtaLx5JJK3cfRvFCKkI4AEtI9mGFUHhHeq-OTgB4T", name: "Navidad Horror", icon: "🎄" },
-            { id: "0t8r-4SIcKPoUMFcSNT83BWbywzolABeYwXRNKu3LUKAtU4sZNRefy17YyLF", name: "Chica llamada", icon: "📞" },
-            { id: "1H8mBGCoEvWjXTxIU-8KaQTUKssDeSynmkn0vC9P1kSV60M5b0wj-lYl5WNm", name: "please open", icon: "🚪" },
-            { id: "s1rZwOx1y_C9zAo20cVXmg0PVCUzBk774oefHUIZ4QZmoalCdqaTWlWVegOx", name: "CUMPLE MESA 17", icon: "🎂" },
-            { id: "9HhAtVLKu5LbVE3jZYwYQt6L0jidSm6-l9TWHoSV1UItFV6mxlwm6Am9nAQk", name: "imagenes terrorificas", icon: "💀" }
+        var MORE_VIDEOS = [
+            { id: "4RwbgS0krw8W4MUCaatGs4mltolJYa7qO2jpgVtIb-YeTswBGwnnx1WWx3zB", name: "CUMPLE NUA", icon: "N" },
+            { id: "32dg9T2c4VDdgz911Ont8-7KCivXhaAtWY_qqEbBdmpntgvZ-183MOXKQXo5", name: "Simulacion juego", icon: "J" },
+            { id: "QHdpsxolVKtBKrvI3GRMELI6YCuFWk4RlkoIOPExlR8q3KwfOX-8DBvZODAi", name: "SCREAM", icon: "!" },
+            { id: "y4_Oc92qpCLg30XkrrRpEMdz7Kepy9WRAXJEA9RQI5qskmjwqG4yMLwEbXkp", name: "FREDDY", icon: "F" },
+            { id: "foMwA4gNRlWtBOb32bvSokNNhWwcGIoNaDcQmq1Y2l48qU9Gfw4s-mvWYRfZ", name: "SIERRA SCREAM", icon: "X" },
+            { id: "FcyXBaU-VbDnpQ1prcngwKQnTqrmlcOoFR3_bfc_Zs2307XyzKq7CUvrhRLS", name: "SILLA EXORCISTA", icon: "E" },
+            { id: "bFeZGewRT-zGZ_hDkmAeeN6abb0XVm_bKutJSEVrPzMk5ahM1dERN6a-5JSC", name: "CAMPANITA", icon: "B" },
+            { id: "InJUQAwi8Q_5KTUAj6O4cB3XaStsogyliiUZ3L-feXUGQlsrqYeRQodogKIb", name: "CASA ZOMBIE", icon: "Z" },
+            { id: "LImnGasDp-MdYtRNIoLyeutF9KyqaeHcMWW5eXdHTFVOBn_0ML0gTC8a1BRD", name: "NINA CABELLO", icon: "H" },
+            { id: "2xUqdAwgP3eu90yiJPGZYnTYyVipJ5oAXqR1dSIDSHj9QqYM4BuLUdQj6myj", name: "VENTANA LLAMADA", icon: "W" },
+            { id: "3M09y8w-8TCP6kujptBPoMP9X4KbQ4M2aSxIBv3lTvK01rmQt1l2s0TwWzzg", name: "RESIDENT EVIL", icon: "RE" },
+            { id: "tx1DHCGxdsEsFwvNsszqtaLx5JJK3cfRvFCKkI4AEtI9mGFUHhHeq-OTgB4T", name: "Navidad Horror", icon: "NH" },
+            { id: "0t8r-4SIcKPoUMFcSNT83BWbywzolABeYwXRNKu3LUKAtU4sZNRefy17YyLF", name: "Chica llamada", icon: "CL" },
+            { id: "1H8mBGCoEvWjXTxIU-8KaQTUKssDeSynmkn0vC9P1kSV60M5b0wj-lYl5WNm", name: "please open", icon: "PO" },
+            { id: "s1rZwOx1y_C9zAo20cVXmg0PVCUzBk774oefHUIZ4QZmoalCdqaTWlWVegOx", name: "CUMPLE MESA 17", icon: "17" },
+            { id: "9HhAtVLKu5LbVE3jZYwYQt6L0jidSm6-l9TWHoSV1UItFV6mxlwm6Am9nAQk", name: "imagenes terrorificas", icon: "IT" }
         ];
-
-        const ALL_VIDEOS = [...QUICK_VIDEOS, ...MORE_VIDEOS];
-
-        const MESAS = [
+        var ALL_VIDEOS = QUICK_VIDEOS.concat(MORE_VIDEOS);
+        var MESAS = [
             { id: 239, name: "1" }, { id: 240, name: "2" }, { id: 241, name: "3" },
             { id: 235, name: "4" }, { id: 227, name: "5" }, { id: 229, name: "6" },
             { id: 225, name: "7" }, { id: 231, name: "8" }, { id: 234, name: "9" },
@@ -407,185 +127,142 @@
             { id: 223, name: "13" }, { id: 230, name: "14" }, { id: 224, name: "15" },
             { id: 237, name: "16" }, { id: 342, name: "17" }, { id: 356, name: "18" }
         ];
-
-        let selectedVideo = null;
-        let selectedMesas = new Set();
-
-        document.addEventListener('DOMContentLoaded', () => {
+        var selectedVideo = null;
+        var selectedMesas = new Set();
+        document.addEventListener("DOMContentLoaded", function() {
             renderQuickVideos();
             renderMoreVideos();
             renderMesas();
         });
-
         function renderQuickVideos() {
-            const grid = document.getElementById('quickVideos');
-            grid.innerHTML = QUICK_VIDEOS.map((video) => \`
-                <div class="video-card" data-video-id="\${video.id}" onclick="selectVideoById('\${video.id}')">
-                    <div class="icon">\${video.icon}</div>
-                    <div class="name">\${video.name}</div>
-                </div>
-            \`).join('');
+            var grid = document.getElementById("quickVideos");
+            var html = "";
+            for (var i = 0; i < QUICK_VIDEOS.length; i++) {
+                var v = QUICK_VIDEOS[i];
+                html += "<div class='video-card' data-video-id='" + v.id + "' onclick=\"selectVideoById('" + v.id + "')\">";
+                html += "<div class='icon'>" + v.icon + "</div>";
+                html += "<div class='name'>" + v.name + "</div></div>";
+            }
+            grid.innerHTML = html;
         }
-
         function renderMoreVideos() {
-            const grid = document.getElementById('moreVideosGrid');
-            grid.innerHTML = MORE_VIDEOS.map((video) => \`
-                <div class="video-card" data-video-id="\${video.id}" onclick="selectVideoById('\${video.id}')">
-                    <div class="icon">\${video.icon}</div>
-                    <div class="name">\${video.name}</div>
-                </div>
-            \`).join('');
+            var grid = document.getElementById("moreVideosGrid");
+            var html = "";
+            for (var i = 0; i < MORE_VIDEOS.length; i++) {
+                var v = MORE_VIDEOS[i];
+                html += "<div class='video-card' data-video-id='" + v.id + "' onclick=\"selectVideoById('" + v.id + "')\">";
+                html += "<div class='icon'>" + v.icon + "</div>";
+                html += "<div class='name'>" + v.name + "</div></div>";
+            }
+            grid.innerHTML = html;
         }
-
         function toggleMoreVideos() {
-            const btn = document.querySelector('.more-videos-toggle');
-            const dropdown = document.getElementById('moreVideosDropdown');
-            btn.classList.toggle('open');
-            dropdown.classList.toggle('show');
+            var btn = document.querySelector(".more-videos-toggle");
+            var dropdown = document.getElementById("moreVideosDropdown");
+            btn.classList.toggle("open");
+            dropdown.classList.toggle("show");
         }
-
         function selectVideoById(videoId) {
-            selectedVideo = ALL_VIDEOS.find(v => v.id === videoId);
+            for (var i = 0; i < ALL_VIDEOS.length; i++) {
+                if (ALL_VIDEOS[i].id === videoId) {
+                    selectedVideo = ALL_VIDEOS[i];
+                    break;
+                }
+            }
             if (!selectedVideo) return;
-
-            document.querySelectorAll('.video-card').forEach(card => {
-                card.classList.toggle('selected', card.dataset.videoId === videoId);
-            });
-
-            document.getElementById('selectedVideo').style.display = 'flex';
-            document.getElementById('selectedIcon').textContent = selectedVideo.icon;
-            document.getElementById('selectedName').textContent = selectedVideo.name;
-
+            var cards = document.querySelectorAll(".video-card");
+            for (var j = 0; j < cards.length; j++) {
+                if (cards[j].getAttribute("data-video-id") === videoId) {
+                    cards[j].classList.add("selected");
+                } else {
+                    cards[j].classList.remove("selected");
+                }
+            }
+            document.getElementById("selectedVideo").style.display = "flex";
+            document.getElementById("selectedIcon").textContent = selectedVideo.icon;
+            document.getElementById("selectedName").textContent = selectedVideo.name;
             updatePublishBtn();
         }
-
         function renderMesas() {
-            const grid = document.getElementById('mesasGrid');
-            grid.innerHTML = \`
-                <button class="mesa-btn select-all-btn" onclick="toggleAll()">✨ TODAS</button>
-                \${MESAS.map(mesa => \`
-                    <button class="mesa-btn" data-id="\${mesa.id}" onclick="toggleMesa(\${mesa.id})">\${mesa.name}</button>
-                \`).join('')}
-            \`;
+            var grid = document.getElementById("mesasGrid");
+            var html = "<button class='mesa-btn select-all-btn' onclick='toggleAll()'>TODAS</button>";
+            for (var i = 0; i < MESAS.length; i++) {
+                var m = MESAS[i];
+                html += "<button class='mesa-btn' data-id='" + m.id + "' onclick='toggleMesa(" + m.id + ")'>" + m.name + "</button>";
+            }
+            grid.innerHTML = html;
         }
-
         function toggleMesa(id) {
-            if (selectedMesas.has(id)) {
-                selectedMesas.delete(id);
-            } else {
-                selectedMesas.add(id);
-            }
+            if (selectedMesas.has(id)) { selectedMesas.delete(id); } else { selectedMesas.add(id); }
             updateUI();
         }
-
         function toggleAll() {
-            if (selectedMesas.size === MESAS.length) {
-                selectedMesas.clear();
-            } else {
-                MESAS.forEach(m => selectedMesas.add(m.id));
-            }
+            if (selectedMesas.size === MESAS.length) { selectedMesas.clear(); } else { for (var i = 0; i < MESAS.length; i++) { selectedMesas.add(MESAS[i].id); } }
             updateUI();
         }
-
-        function selectNone() {
-            selectedMesas.clear();
-            updateUI();
-        }
-
+        function selectNone() { selectedMesas.clear(); updateUI(); }
         function selectRange(start, end) {
             selectNone();
-            MESAS.forEach(mesa => {
-                const num = parseInt(mesa.name);
-                if (num >= start && num <= end) {
-                    selectedMesas.add(mesa.id);
-                }
-            });
+            for (var i = 0; i < MESAS.length; i++) {
+                var num = parseInt(MESAS[i].name);
+                if (num >= start && num <= end) { selectedMesas.add(MESAS[i].id); }
+            }
             updateUI();
         }
-
         function updateUI() {
-            MESAS.forEach(mesa => {
-                const btn = document.querySelector(\`[data-id="\${mesa.id}"]\`);
-                if (btn) btn.classList.toggle('selected', selectedMesas.has(mesa.id));
-            });
-
-            const allBtn = document.querySelector('.select-all-btn');
-            allBtn.classList.toggle('selected', selectedMesas.size === MESAS.length);
-
-            const count = selectedMesas.size;
-            const counter = document.getElementById('counter');
-            if (count === 0) {
-                counter.textContent = 'Selecciona las mesas donde publicar';
-            } else if (count === MESAS.length) {
-                counter.textContent = '✨ Todas las mesas seleccionadas';
-            } else {
-                counter.textContent = \`\${count} mesa\${count !== 1 ? 's' : ''} seleccionada\${count !== 1 ? 's' : ''}\`;
+            for (var i = 0; i < MESAS.length; i++) {
+                var btn = document.querySelector("[data-id='" + MESAS[i].id + "']");
+                if (btn) {
+                    if (selectedMesas.has(MESAS[i].id)) { btn.classList.add("selected"); } else { btn.classList.remove("selected"); }
+                }
             }
-
+            var allBtn = document.querySelector(".select-all-btn");
+            if (selectedMesas.size === MESAS.length) { allBtn.classList.add("selected"); } else { allBtn.classList.remove("selected"); }
+            var count = selectedMesas.size;
+            var counter = document.getElementById("counter");
+            if (count === 0) { counter.textContent = "Selecciona las mesas donde publicar"; }
+            else if (count === MESAS.length) { counter.textContent = "Todas las mesas seleccionadas"; }
+            else { counter.textContent = count + " mesas seleccionadas"; }
             updatePublishBtn();
         }
-
         function updatePublishBtn() {
-            const btn = document.getElementById('publishBtn');
+            var btn = document.getElementById("publishBtn");
             btn.disabled = !selectedVideo || selectedMesas.size === 0;
         }
-
-        async function publish() {
+        function publish() {
             if (!selectedVideo || selectedMesas.size === 0) return;
-
-            const btn = document.getElementById('publishBtn');
+            var btn = document.getElementById("publishBtn");
             btn.disabled = true;
-            btn.textContent = '⏳ Publicando...';
-            showStatus(\`Enviando "\${selectedVideo.name}" a \${selectedMesas.size} mesa(s)...\`, 'loading');
-
-            selectedMesas.forEach(id => {
-                const mesaBtn = document.querySelector(\`[data-id="\${id}"]\`);
-                if (mesaBtn) mesaBtn.classList.add('publishing');
-            });
-
-            try {
-                const videoUrl = BASE_URL + selectedVideo.id;
-                const response = await fetch('/api/publish', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        tables: Array.from(selectedMesas),
-                        videoUrl: videoUrl
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    showStatus(\`✅ "\${selectedVideo.name}" publicado en \${selectedMesas.size} mesa(s)!\`, 'success');
-                    selectedMesas.forEach(id => {
-                        const mesaBtn = document.querySelector(\`[data-id="\${id}"]\`);
-                        if (mesaBtn) {
-                            mesaBtn.classList.remove('publishing');
-                            mesaBtn.classList.add('selected');
-                        }
-                    });
+            btn.textContent = "Publicando...";
+            showStatus("Enviando " + selectedVideo.name + " a " + selectedMesas.size + " mesas...", "loading");
+            var ids = [];
+            selectedMesas.forEach(function(id) { ids.push(id); });
+            var videoUrl = BASE_URL + selectedVideo.id;
+            fetch("/api/publish", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tables: ids, videoUrl: videoUrl })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(result) {
+                if (result.success) {
+                    showStatus("Publicado en " + selectedMesas.size + " mesas!", "success");
                 } else {
-                    throw new Error(result.error || 'Error desconocido');
+                    showStatus("Error: " + (result.error || "desconocido"), "error");
                 }
-
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus(\`❌ Error: \${error.message}\`, 'error');
-                selectedMesas.forEach(id => {
-                    const mesaBtn = document.querySelector(\`[data-id="\${id}"]\`);
-                    if (mesaBtn) mesaBtn.classList.remove('publishing');
-                });
-            }
-
-            btn.disabled = false;
-            btn.textContent = '🚀 PUBLICAR';
+            })
+            .catch(function(error) {
+                showStatus("Error: " + error.message, "error");
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.textContent = "PUBLICAR";
+            });
         }
-
         function showStatus(message, type) {
-            const status = document.getElementById('status');
+            var status = document.getElementById("status");
             status.textContent = message;
-            status.className = \`status show \${type}\`;
+            status.className = "status show " + type;
         }
     </script>
 </body>
