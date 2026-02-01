@@ -7,6 +7,16 @@ TOKEN_API = "https://dotyk.me/api/v1.2/token/password"
 RESTAURANT_API = "https://eu.restaurant.dotyk.cloud"
 VENUE = "nua-barcelona"
 
+# Fallback names in case frontend doesn't send them
+CATEGORY_NAMES = {
+    "7037dd01-8e70-4571-8857-6295f01c8862": "Smart Menús",
+    "7b2ed65e-05c9-45b9-b7b9-adc83345cd5b": "Smart Menú: Poke edition",
+    "a61bbcb4-6efe-4be7-85f1-2d6c84adf564": "Smart Menú: Burger edition",
+    "782e61b7-9cc9-48e2-b5be-b78876692929": "Crea tu Smart Menú",
+    "338712fd-f2a9-463e-8532-6fa17c7ebe8e": "Smart Love Menú",
+    "4c394f20-e562-4ed5-aa2b-fa7a3ffbbc18": "Smart Menú: Business Edition",
+}
+
 def ssl_ctx():
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
@@ -45,7 +55,7 @@ class handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length)) if length else {}
             category_id = body.get("categoryId")
             is_enabled = body.get("isEnabled")
-            category_name = body.get("name", "")
+            category_name = body.get("name") or CATEGORY_NAMES.get(category_id, "")
 
             if not EMAIL or not PASSWORD:
                 self.send_json(500, {"success": False, "error": f"Sin credenciales. EMAIL={bool(EMAIL)} PASS={bool(PASSWORD)}"})
