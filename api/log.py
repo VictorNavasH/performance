@@ -1,16 +1,30 @@
 from http.server import BaseHTTPRequestHandler
-import json, os, ssl, urllib.request, urllib.parse
+import json, os, ssl, urllib.request
 from datetime import datetime, timezone, timedelta
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
-MADRID_TZ = timezone(timedelta(hours=1))  # CET base, adjusted below
+BLOB_TOKEN = os.environ.get("BLOB_READ_WRITE_TOKEN", "")
+BLOB_API = "https://blob.vercel-storage.com"
+LOG_PATH = "performance_logs.json"
+MAX_LOGS = 100
+
+
+def ssl_ctx():
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+
+
+def get_store_id():
+    parts = BLOB_TOKEN.split("_")
+    if len(parts) >= 4:
+        return parts[3]
+    return None
 
 
 def madrid_now():
     """Get current Madrid time (handles CET/CEST)."""
     utc_now = datetime.now(timezone.utc)
-    # Simple DST rule: last Sunday of March to last Sunday of October
     year = utc_now.year
     # Last Sunday of March
     mar31 = datetime(year, 3, 31, tzinfo=timezone.utc)
@@ -30,32 +44,84 @@ def madrid_now():
     return madrid.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def ssl_ctx():
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    return ctx
+def read_logs():
+    """Read logs from Vercel Blob. Returns empty list if not found."""
+    if not BLOB_TOKEN:
+        return []
+
+    store_id = get_store_id()
+    if store_id:
+        try:
+            url = f"https://{store_id}.public.blob.vercel-storage.com/{LOG_PATH}"
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
+                return json.loads(r.read().decode())
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return []
+        except:
+            pass
+
+    # Fallback: list API
+    try:
+        req = urllib.request.Request(
+            f"{BLOB_API}?prefix={LOG_PATH}",
+            headers={"Authorization": f"Bearer {BLOB_TOKEN}"},
+            method="GET"
+        )
+        with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
+            data = json.loads(r.read().decode())
+            blobs = data.get("blobs", [])
+            if blobs:
+                blob_url = blobs[0].get("url", "")
+                if blob_url:
+                    req2 = urllib.request.Request(blob_url)
+                    with urllib.request.urlopen(req2, context=ssl_ctx(), timeout=10) as r2:
+                        return json.loads(r2.read().decode())
+    except:
+        pass
+
+    return []
+
+
+def write_logs(logs):
+    """Write logs JSON to Vercel Blob."""
+    body = json.dumps(logs, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        f"{BLOB_API}/{LOG_PATH}",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {BLOB_TOKEN}",
+            "Content-Type": "application/json",
+            "x-api-version": "7",
+            "x-content-type": "application/json",
+            "x-add-random-suffix": "0",
+        },
+        method="PUT"
+    )
+    with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
+        return json.loads(r.read().decode())
 
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
     def do_POST(self):
-        """Save an activation log."""
+        """Save a performance log entry."""
         try:
-            if not SUPABASE_URL or not SUPABASE_KEY:
-                self.send_json(500, {"error": "Supabase no configurado"})
+            if not BLOB_TOKEN:
+                self.send_json(500, {"error": "BLOB_READ_WRITE_TOKEN no configurado"})
                 return
 
-            length = int(self.headers.get('Content-Length', 0))
+            length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length)) if length else {}
 
-            row = {
+            entry = {
                 "video_name": body.get("video_name", ""),
                 "video_id": body.get("video_id", ""),
                 "table_names": body.get("table_names", ""),
@@ -65,37 +131,25 @@ class handler(BaseHTTPRequestHandler):
                 "activated_at_madrid": madrid_now()
             }
 
-            data = json.dumps(row).encode()
-            url = f"{SUPABASE_URL}/rest/v1/performance_logs"
-            req = urllib.request.Request(url, data=data, headers={
-                "Content-Type": "application/json",
-                "apikey": SUPABASE_KEY,
-                "Authorization": f"Bearer {SUPABASE_KEY}",
-                "Prefer": "return=minimal"
-            }, method="POST")
+            # Read existing, prepend new entry, trim to MAX_LOGS
+            logs = read_logs()
+            logs.insert(0, entry)
+            logs = logs[:MAX_LOGS]
 
-            urllib.request.urlopen(req, context=ssl_ctx(), timeout=10)
+            write_logs(logs)
             self.send_json(200, {"success": True})
 
         except Exception as e:
             self.send_json(500, {"success": False, "error": str(e)})
 
     def do_GET(self):
-        """Get recent activation logs."""
+        """Get recent performance logs."""
         try:
-            if not SUPABASE_URL or not SUPABASE_KEY:
-                self.send_json(500, {"error": "Supabase no configurado"})
+            if not BLOB_TOKEN:
+                self.send_json(200, [])
                 return
 
-            url = f"{SUPABASE_URL}/rest/v1/performance_logs?select=*&order=activated_at.desc&limit=30"
-            req = urllib.request.Request(url, headers={
-                "apikey": SUPABASE_KEY,
-                "Authorization": f"Bearer {SUPABASE_KEY}"
-            }, method="GET")
-
-            with urllib.request.urlopen(req, context=ssl_ctx(), timeout=10) as r:
-                logs = json.loads(r.read().decode())
-
+            logs = read_logs()
             self.send_json(200, logs)
 
         except Exception as e:
@@ -103,7 +157,7 @@ class handler(BaseHTTPRequestHandler):
 
     def send_json(self, code, data):
         self.send_response(code)
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        self.wfile.write(json.dumps(data, ensure_ascii=False).encode())
