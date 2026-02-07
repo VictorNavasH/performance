@@ -114,13 +114,30 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json(500, {"error": "BLOB_READ_WRITE_TOKEN no configurado en Vercel"})
                 return
 
-            schedule = body.get("schedule", {})
-            if "rules" not in schedule:
-                schedule["rules"] = []
-            if "enabled" not in schedule:
-                schedule["enabled"] = False
+            new_schedule = body.get("schedule", {})
+            if "rules" not in new_schedule:
+                new_schedule["rules"] = []
+            if "enabled" not in new_schedule:
+                new_schedule["enabled"] = False
 
-            result = write_schedule(schedule)
+            # Preserve lastAction and lastCronRun from current server state
+            # so that admin saves don't overwrite cron state
+            current = read_schedule()
+            new_schedule["lastAction"] = current.get("lastAction")
+            new_schedule["lastCronRun"] = current.get("lastCronRun")
+
+            # If enabled state changed, reset lastAction so cron re-evaluates
+            if new_schedule.get("enabled") != current.get("enabled"):
+                new_schedule["lastAction"] = None
+
+            # If rules changed, reset lastAction so cron re-evaluates
+            current_rules = json.dumps(current.get("rules", []), sort_keys=True)
+            new_rules = json.dumps(new_schedule.get("rules", []), sort_keys=True)
+            if current_rules != new_rules:
+                new_schedule["lastAction"] = None
+
+            result = write_schedule(new_schedule)
+            schedule = new_schedule
             self.send_json(200, {"success": True, "url": result.get("url", ""), "schedule": schedule})
         except Exception as e:
             self.send_json(500, {"error": f"Write: {str(e)}"})

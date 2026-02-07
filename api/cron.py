@@ -19,15 +19,25 @@ VENUE = "nua-barcelona"
 
 BLOB_API = "https://blob.vercel-storage.com"
 
-# All category IDs to toggle (parent + children)
-ALL_CATEGORY_IDS = {
-    "7037dd01-8e70-4571-8857-6295f01c8862": "Smart Menús",
+# Parent category
+PARENT_CATEGORY_ID = "7037dd01-8e70-4571-8857-6295f01c8862"
+PARENT_CATEGORY_NAME = "Smart Menús"
+
+# All child menu IDs
+ALL_MENU_IDS = {
     "7b2ed65e-05c9-45b9-b7b9-adc83345cd5b": "Smart Menú: Poke edition",
     "a61bbcb4-6efe-4be7-85f1-2d6c84adf564": "Smart Menú: Burger edition",
     "782e61b7-9cc9-48e2-b5be-b78876692929": "Crea tu Smart Menú",
     "338712fd-f2a9-463e-8532-6fa17c7ebe8e": "Smart Love Menú",
     "4c394f20-e562-4ed5-aa2b-fa7a3ffbbc18": "Smart Menú: Business Edition",
 }
+
+# Default menus (the 3 standard ones)
+DEFAULT_MENU_IDS = [
+    "7b2ed65e-05c9-45b9-b7b9-adc83345cd5b",  # Poke edition
+    "a61bbcb4-6efe-4be7-85f1-2d6c84adf564",  # Burger edition
+    "782e61b7-9cc9-48e2-b5be-b78876692929",   # Crea tu Smart Menú
+]
 
 def ssl_ctx():
     ctx = ssl.create_default_context()
@@ -135,13 +145,20 @@ def patch_category(jwt_token, cat_id, cat_name, is_enabled):
     with urllib.request.urlopen(req, context=ssl_ctx(), timeout=15) as resp:
         return resp.status
 
-def should_be_enabled(schedule, now):
-    """Check if menus should be enabled right now based on schedule rules."""
+def get_active_menu_ids(schedule, now):
+    """
+    Returns which menu IDs should be active right now based on schedule rules.
+    Returns None if scheduling is disabled.
+    Returns a set of menu IDs that should be enabled (empty set = all disabled).
+    """
     if not schedule.get("enabled"):
         return None  # Schedule disabled, don't act
 
     weekday = now.weekday()  # 0=Monday ... 6=Sunday
     current_time = now.strftime("%H:%M")
+
+    active_ids = set()
+    any_rule_matched = False
 
     for rule in schedule.get("rules", []):
         if not rule.get("active", True):
@@ -150,9 +167,15 @@ def should_be_enabled(schedule, now):
             start = rule.get("startTime", "00:00")
             end = rule.get("endTime", "23:59")
             if start <= current_time < end:
-                return True
+                any_rule_matched = True
+                # Get menu IDs for this rule (fallback to defaults for backward compat)
+                rule_menus = rule.get("menuIds", DEFAULT_MENU_IDS)
+                for mid in rule_menus:
+                    active_ids.add(mid)
 
-    return False
+    if any_rule_matched:
+        return active_ids
+    return set()  # No rule matched = disable all
 
 
 class handler(BaseHTTPRequestHandler):
@@ -176,21 +199,22 @@ class handler(BaseHTTPRequestHandler):
             now_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
             # Determine desired state
-            desired = should_be_enabled(schedule, now)
+            active_menu_ids = get_active_menu_ids(schedule, now)
 
-            if desired is None:
+            if active_menu_ids is None:
                 schedule["lastCronRun"] = now_str
                 write_schedule(schedule)
                 self.send_json(200, {"action": "none", "reason": "schedule disabled", "time": now_str})
                 return
 
-            desired_action = "enabled" if desired else "disabled"
-            last_action = schedule.get("lastAction")
+            # Build desired state as a sorted string for comparison
+            desired_state = ",".join(sorted(active_menu_ids)) if active_menu_ids else "none"
+            last_state = schedule.get("lastAction")
 
-            if desired_action == last_action:
+            if desired_state == last_state:
                 schedule["lastCronRun"] = now_str
                 write_schedule(schedule)
-                self.send_json(200, {"action": "none", "reason": f"already {desired_action}", "time": now_str})
+                self.send_json(200, {"action": "none", "reason": "already in desired state", "time": now_str})
                 return
 
             # State change needed
@@ -204,28 +228,42 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             errors = []
-            for cat_id, cat_name in ALL_CATEGORY_IDS.items():
+            has_any_active = len(active_menu_ids) > 0
+
+            # Parent category: enable if any menu is active, disable otherwise
+            try:
+                patch_category(jwt_token, PARENT_CATEGORY_ID, PARENT_CATEGORY_NAME, has_any_active)
+            except Exception as e:
+                errors.append(f"{PARENT_CATEGORY_NAME}: {str(e)}")
+
+            # Each child menu: enable only if in active set
+            for cat_id, cat_name in ALL_MENU_IDS.items():
                 try:
-                    patch_category(jwt_token, cat_id, cat_name, desired)
+                    should_enable = cat_id in active_menu_ids
+                    patch_category(jwt_token, cat_id, cat_name, should_enable)
                 except Exception as e:
                     errors.append(f"{cat_name}: {str(e)}")
 
             # Update schedule state
-            schedule["lastAction"] = desired_action
+            schedule["lastAction"] = desired_state
             schedule["lastCronRun"] = now_str
             write_schedule(schedule)
 
+            enabled_names = [ALL_MENU_IDS[mid] for mid in active_menu_ids if mid in ALL_MENU_IDS]
+
             if errors:
                 self.send_json(200, {
-                    "action": desired_action,
+                    "action": "updated",
+                    "enabled_menus": enabled_names,
                     "time": now_str,
                     "partial_errors": errors
                 })
             else:
                 self.send_json(200, {
-                    "action": desired_action,
+                    "action": "updated",
+                    "enabled_menus": enabled_names,
                     "time": now_str,
-                    "categories_updated": len(ALL_CATEGORY_IDS)
+                    "categories_updated": len(ALL_MENU_IDS) + 1
                 })
 
         except Exception as e:

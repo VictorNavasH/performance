@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NÜA Smart Performance</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <style>
         * {
             box-sizing: border-box;
@@ -611,6 +614,96 @@
         .form-row > div {
             flex: 1;
         }
+
+        .menu-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .menu-check.selected {
+            background: rgba(34,124,157,0.2);
+            border-color: rgba(34,124,157,0.5);
+        }
+        .menu-check input[type="checkbox"] {
+            accent-color: #227c9d;
+            width: 16px;
+            height: 16px;
+        }
+        .menu-check span {
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+        }
+        .menu-check.selected span {
+            color: white;
+        }
+
+        .rule-menus {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .rule-menu-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(34,124,157,0.2);
+            color: rgba(34,124,157,0.9);
+        }
+
+        /* --- Activation History --- */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .history-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .history-item .history-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .history-item .history-video {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .history-item .history-time {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .history-item .history-detail {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .history-role-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .history-role-tag.admin {
+            background: rgba(34,124,157,0.2);
+            color: #227c9d;
+        }
+        .history-role-tag.camarero {
+            background: rgba(168,85,247,0.2);
+            color: #a855f7;
+        }
     </style>
 </head>
 
@@ -689,6 +782,14 @@
                 <button class="btn btn-primary" id="publishBtn" onclick="publish()" disabled>🚀 PUBLICAR</button>
                 <div id="statusPub" class="status"></div>
             </div>
+
+            <!-- Activation History (admin only) -->
+            <div class="card" id="historyCard" style="display:none">
+                <h2>Historial de activaciones</h2>
+                <div class="history-list" id="historyList">
+                    <p style="color:rgba(255,255,255,0.4);font-size:13px;text-align:center">Cargando...</p>
+                </div>
+            </div>
         </div>
 
         <!-- 4. RESTAURANT SCREEN -->
@@ -758,6 +859,11 @@
                             <label>Hora fin</label>
                             <input type="time" id="ruleEndTime" value="15:30">
                         </div>
+                    </div>
+
+                    <div style="margin:12px 0">
+                        <label>Menus a activar</label>
+                        <div id="menuSelector" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
                     </div>
 
                     <div style="display:flex;gap:8px;margin-top:12px">
@@ -839,6 +945,10 @@
         function enterMode(mode) {
             document.getElementById('modeSelector').style.display = 'none';
             document.getElementById(mode + 'Screen').style.display = 'block';
+            if (mode === 'performance' && currentRole === 'admin') {
+                document.getElementById('historyCard').style.display = 'block';
+                loadActivationHistory();
+            }
         }
         function showModeSelector() {
             document.querySelectorAll('.app-screen').forEach(function (s) { s.style.display = 'none'; });
@@ -926,6 +1036,19 @@
 
         function toggleMoreVideos() { document.getElementById('moreVideosDropdown').classList.toggle('show'); }
 
+        function getVideoName(videoId) {
+            var all = QUICK_VIDEOS.concat(MORE_VIDEOS);
+            var found = all.find(function(v) { return v.id === videoId; });
+            return found ? found.name : 'Desconocido';
+        }
+
+        function getMesaNames(mesaIds) {
+            return Array.from(mesaIds).map(function(id) {
+                var m = MESAS.find(function(x) { return x.id === id; });
+                return m ? m.name : String(id);
+            }).sort(function(a, b) { return parseInt(a) - parseInt(b); });
+        }
+
         async function publish() {
             var btn = document.getElementById('publishBtn');
             var status = document.getElementById('statusPub');
@@ -941,6 +1064,22 @@
                 var data = await res.json();
                 if (data.success) {
                     status.textContent = "✅ ¡Publicado!"; status.className = "status show success";
+                    // Log activation (fire and forget)
+                    var mesaNames = getMesaNames(selectedMesas);
+                    fetch('/api/log', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            video_name: getVideoName(selectedVideo),
+                            video_id: selectedVideo,
+                            table_names: mesaNames.join(', '),
+                            table_ids: Array.from(selectedMesas).join(', '),
+                            table_count: selectedMesas.size,
+                            role: currentRole
+                        })
+                    }).then(function() {
+                        if (currentRole === 'admin') loadActivationHistory();
+                    }).catch(function() {});
                 } else throw new Error(data.error);
             } catch (e) {
                 status.textContent = "❌ Error: " + e.message; status.className = "status show error";
@@ -948,11 +1087,37 @@
             btn.disabled = false;
         }
 
+        // ========== ACTIVATION HISTORY ==========
+        async function loadActivationHistory() {
+            var container = document.getElementById('historyList');
+            try {
+                var res = await fetch('/api/log');
+                var logs = await res.json();
+                if (!Array.isArray(logs) || logs.length === 0) {
+                    container.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:13px;text-align:center">No hay activaciones registradas</p>';
+                    return;
+                }
+                container.innerHTML = logs.map(function(log) {
+                    return '<div class="history-item">' +
+                        '<div class="history-top">' +
+                        '<span class="history-video">' + (log.video_name || '') + '</span>' +
+                        '<span class="history-role-tag ' + (log.role || '') + '">' + (log.role || '') + '</span>' +
+                        '</div>' +
+                        '<div class="history-time">' + (log.activated_at_madrid || '') + '</div>' +
+                        '<div class="history-detail">Mesas: ' + (log.table_names || '') + ' (' + (log.table_count || 0) + ')</div>' +
+                        '</div>';
+                }).join('');
+            } catch (e) {
+                container.innerHTML = '<p style="color:rgba(239,68,68,0.7);font-size:13px;text-align:center">Error al cargar historial</p>';
+            }
+        }
+
         // ========== SCHEDULE FUNCTIONS ==========
         var DAY_NAMES = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
         var DAY_FULL = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
         var currentSchedule = { enabled: false, rules: [], lastAction: null, lastCronRun: null };
         var selectedDays = new Set();
+        var selectedMenuIds = new Set();
 
         async function loadSchedule() {
             try {
@@ -963,6 +1128,10 @@
             } catch (e) {
                 document.getElementById('scheduleStatus').textContent = 'Error al cargar';
             }
+        }
+
+        function getMenuShortName(name) {
+            return name.replace('Smart Menú: ', '').replace('Smart ', '');
         }
 
         function renderSchedule() {
@@ -985,6 +1154,15 @@
                     var active = rule.days && rule.days.indexOf(i) !== -1;
                     return '<div class="rule-day ' + (active ? 'active' : 'inactive') + '">' + d + '</div>';
                 }).join('');
+
+                // Show which menus this rule activates
+                var menusHtml = '';
+                var ruleMenus = rule.menuIds || DEFAULT_MENU_IDS;
+                menusHtml = '<div class="rule-menus">' + ruleMenus.map(function (mid) {
+                    var m = RESTAURANT_MENUS.find(function(x) { return x.id === mid; });
+                    return m ? '<span class="rule-menu-tag">' + getMenuShortName(m.name) + '</span>' : '';
+                }).join('') + '</div>';
+
                 return '<div class="schedule-rule">' +
                     '<div class="rule-header">' +
                     '<span class="rule-label">' + (rule.label || 'Regla') + '</span>' +
@@ -993,17 +1171,21 @@
                     '<button class="rule-delete" onclick="deleteRule(\'' + rule.id + '\')" title="Eliminar">✕</button>' +
                     '</div></div>' +
                     '<div class="rule-days">' + daysHtml + '</div>' +
+                    menusHtml +
                     '</div>';
             }).join('');
         }
 
         function showAddRuleForm() {
             selectedDays = new Set();
+            // Por defecto, seleccionar los 3 menús habituales
+            selectedMenuIds = new Set(DEFAULT_MENU_IDS);
             document.getElementById('ruleName').value = '';
             document.getElementById('ruleStartTime').value = '12:00';
             document.getElementById('ruleEndTime').value = '15:30';
             document.getElementById('ruleForm').style.display = 'block';
             renderDaySelector();
+            renderMenuSelector();
         }
 
         function cancelRuleForm() {
@@ -1023,6 +1205,27 @@
             renderDaySelector();
         }
 
+        function renderMenuSelector() {
+            var container = document.getElementById('menuSelector');
+            container.innerHTML = RESTAURANT_MENUS.map(function (m) {
+                var checked = selectedMenuIds.has(m.id);
+                var cls = 'menu-check' + (checked ? ' selected' : '');
+                return '<label class="' + cls + '">' +
+                    '<input type="checkbox" ' + (checked ? 'checked' : '') +
+                    ' onchange="toggleMenuSelection(\'' + m.id + '\')">' +
+                    '<span>' + m.name + '</span></label>';
+            }).join('');
+        }
+
+        function toggleMenuSelection(menuId) {
+            if (selectedMenuIds.has(menuId)) {
+                selectedMenuIds.delete(menuId);
+            } else {
+                selectedMenuIds.add(menuId);
+            }
+            renderMenuSelector();
+        }
+
         async function saveRule() {
             var name = document.getElementById('ruleName').value.trim();
             var startTime = document.getElementById('ruleStartTime').value;
@@ -1032,6 +1235,7 @@
             if (!name) { status.textContent = '⚠️ Escribe un nombre'; status.className = 'status show error'; return; }
             if (selectedDays.size === 0) { status.textContent = '⚠️ Selecciona al menos un dia'; status.className = 'status show error'; return; }
             if (!startTime || !endTime) { status.textContent = '⚠️ Indica horario'; status.className = 'status show error'; return; }
+            if (selectedMenuIds.size === 0) { status.textContent = '⚠️ Selecciona al menos un menu'; status.className = 'status show error'; return; }
 
             var rule = {
                 id: 'rule-' + Date.now(),
@@ -1039,6 +1243,7 @@
                 days: Array.from(selectedDays).sort(),
                 startTime: startTime,
                 endTime: endTime,
+                menuIds: Array.from(selectedMenuIds),
                 active: true
             };
 
@@ -1122,41 +1327,94 @@
         }
 
         // ========== MENU TOGGLE ==========
+        // Los 3 primeros menús son los habituales (se activan por defecto con el bloque)
+        var DEFAULT_MENU_IDS = [
+            "7b2ed65e-05c9-45b9-b7b9-adc83345cd5b", // Poke edition
+            "a61bbcb4-6efe-4be7-85f1-2d6c84adf564", // Burger edition
+            "782e61b7-9cc9-48e2-b5be-b78876692929"  // Crea tu Smart Menú
+        ];
+
+        function patchMenu(catId, isEnabled) {
+            var name;
+            if (catId === SMART_MENU_CATEGORY.id) {
+                name = SMART_MENU_CATEGORY.name;
+            } else {
+                var found = RESTAURANT_MENUS.find(function(x) { return x.id === catId; });
+                name = found ? found.name : "";
+            }
+            return fetch('/api/menus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoryId: catId, isEnabled: isEnabled, name: name })
+            }).then(function (r) { return r.json(); });
+        }
+
+        function syncCheckboxUI() {
+            // Actualiza visualmente todos los checkboxes según el estado real
+            // Se llama después de cada operación exitosa
+        }
+
         async function toggleMenu(id, enabled) {
             var status = document.getElementById('statusRest');
             var isCategory = (id === SMART_MENU_CATEGORY.id);
-            status.textContent = isCategory ? "Actualizando categoría y menús..." : "Actualizando menú...";
+            status.textContent = "Actualizando...";
             status.className = "status show loading";
             try {
-                // Siempre PATCH el item que se tocó
-                var ids = [id];
-                // Si es la categoría padre, también PATCH todos los hijos
-                if (isCategory) {
-                    RESTAURANT_MENUS.forEach(function (m) { ids.push(m.id); });
+                var promises = [];
+
+                if (isCategory && enabled) {
+                    // ACTIVAR BLOQUE: activa padre + solo los 3 menús habituales
+                    // Los esporádicos se quedan desactivados
+                    promises.push(patchMenu(SMART_MENU_CATEGORY.id, true));
+                    RESTAURANT_MENUS.forEach(function (m) {
+                        var isDefault = DEFAULT_MENU_IDS.indexOf(m.id) !== -1;
+                        promises.push(patchMenu(m.id, isDefault));
+                    });
+                } else if (isCategory && !enabled) {
+                    // DESACTIVAR BLOQUE: desactiva padre + todos los hijos
+                    promises.push(patchMenu(SMART_MENU_CATEGORY.id, false));
+                    RESTAURANT_MENUS.forEach(function (m) {
+                        promises.push(patchMenu(m.id, false));
+                    });
+                } else if (!isCategory && enabled) {
+                    // ACTIVAR un menú hijo: también activar el padre si está desactivado
+                    var parentCb = document.querySelector('#menuList .menu-item:first-child input[type=checkbox]');
+                    if (parentCb && !parentCb.checked) {
+                        promises.push(patchMenu(SMART_MENU_CATEGORY.id, true));
+                    }
+                    promises.push(patchMenu(id, true));
+                } else {
+                    // DESACTIVAR un menú hijo: solo desactivar ese hijo
+                    promises.push(patchMenu(id, false));
                 }
-                // Enviar todos en paralelo
-                var promises = ids.map(function (catId) {
-                    return fetch('/api/menus', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ categoryId: catId, isEnabled: enabled, name: catId === SMART_MENU_CATEGORY.id ? SMART_MENU_CATEGORY.name : RESTAURANT_MENUS.find(function(x){return x.id===catId}).name })
-                    }).then(function (r) { return r.json(); });
-                });
+
                 var results = await Promise.all(promises);
                 var failed = results.filter(function (r) { return !r.success; });
-                if (failed.length === 0) {
-                    status.textContent = "✅ " + (isCategory ? "Categoría y menús" : "Menú") + (enabled ? " activados" : " desactivados");
-                    status.className = "status show success";
-                    // Si es categoría, sincronizar toggles hijos
-                    if (isCategory) {
-                        document.querySelectorAll('#menuList .menu-item input[type=checkbox]').forEach(function (cb) {
-                            cb.checked = enabled;
-                        });
+                if (failed.length > 0) throw new Error(failed[0].error);
+
+                // Actualizar UI de checkboxes
+                var allCbs = document.querySelectorAll('#menuList .menu-item input[type=checkbox]');
+                var parentCb = allCbs[0]; // primer checkbox = categoría padre
+
+                if (isCategory && enabled) {
+                    parentCb.checked = true;
+                    for (var i = 0; i < RESTAURANT_MENUS.length; i++) {
+                        allCbs[i + 1].checked = DEFAULT_MENU_IDS.indexOf(RESTAURANT_MENUS[i].id) !== -1;
                     }
-                    setTimeout(function () { status.className = "status"; }, 2000);
+                    status.textContent = "✅ Bloque activado (3 menús habituales)";
+                } else if (isCategory && !enabled) {
+                    allCbs.forEach(function (cb) { cb.checked = false; });
+                    status.textContent = "✅ Bloque y menús desactivados";
+                } else if (!isCategory && enabled) {
+                    parentCb.checked = true;
+                    // El checkbox del hijo ya se marcó por el onchange
+                    status.textContent = "✅ Menú activado";
                 } else {
-                    throw new Error(failed[0].error);
+                    status.textContent = "✅ Menú desactivado";
                 }
+
+                status.className = "status show success";
+                setTimeout(function () { status.className = "status"; }, 2000);
             } catch (e) {
                 status.textContent = "❌ Error: " + e.message; status.className = "status show error";
             }

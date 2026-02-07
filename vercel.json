@@ -18,7 +18,19 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/log.py",
+      "use": "@vercel/python"
+    },
+    {
       "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.svg",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.png",
       "use": "@vercel/static"
     }
   ],
@@ -42,6 +54,18 @@
     {
       "src": "/api/cron",
       "dest": "/api/cron.py"
+    },
+    {
+      "src": "/api/log",
+      "dest": "/api/log.py"
+    },
+    {
+      "src": "/favicon.svg",
+      "dest": "/favicon.svg"
+    },
+    {
+      "src": "/favicon.png",
+      "dest": "/favicon.png"
     },
     {
       "src": "/(.*)",
