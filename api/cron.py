@@ -6,7 +6,7 @@ try:
 except ImportError:
     ZoneInfo = None
 
-CRON_SECRET = os.environ.get("CRON_SECRET", "")
+CRON_SECRET = os.environ.get("CRON_SECRET", "").strip()
 BLOB_TOKEN = os.environ.get("BLOB_READ_WRITE_TOKEN", "")
 SCHEDULE_PATH = "schedule.json"
 
@@ -181,9 +181,13 @@ def get_active_menu_ids(schedule, now):
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            # Verify secret
+            # Verify secret (Vercel sends Authorization: Bearer <CRON_SECRET>)
+            auth_header = self.headers.get("Authorization", "")
+            bearer_secret = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
+            # Also accept ?secret= query param for manual testing
             query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
-            secret = query.get("secret", [""])[0]
+            query_secret = query.get("secret", [""])[0]
+            secret = (bearer_secret or query_secret).strip()
 
             if not CRON_SECRET or secret != CRON_SECRET:
                 self.send_json(401, {"error": "Unauthorized"})
@@ -202,8 +206,7 @@ class handler(BaseHTTPRequestHandler):
             active_menu_ids = get_active_menu_ids(schedule, now)
 
             if active_menu_ids is None:
-                schedule["lastCronRun"] = now_str
-                write_schedule(schedule)
+                # Schedule disabled - no Blob write needed, just respond
                 self.send_json(200, {"action": "none", "reason": "schedule disabled", "time": now_str})
                 return
 
@@ -212,8 +215,7 @@ class handler(BaseHTTPRequestHandler):
             last_state = schedule.get("lastAction")
 
             if desired_state == last_state:
-                schedule["lastCronRun"] = now_str
-                write_schedule(schedule)
+                # Already in desired state - no Blob write needed (saves 1 operation)
                 self.send_json(200, {"action": "none", "reason": "already in desired state", "time": now_str})
                 return
 
